@@ -8,12 +8,12 @@ import java.util.zip.Inflater
 
 import akka.annotation.InternalApi
 import akka.stream.impl.io.ByteStringParser
-import akka.stream.impl.io.ByteStringParser.{ ParseResult, ParseStep }
+import akka.stream.impl.io.ByteStringParser.{ParseResult, ParseStep}
 import akka.util.ByteString
 
 /** INTERNAL API */
 @InternalApi private[akka] abstract class DeflateDecompressorBase(maxBytesPerChunk: Int)
-  extends ByteStringParser[ByteString] {
+    extends ByteStringParser[ByteString] {
 
   abstract class DecompressorParsingLogic extends ParsingLogic {
     val inflater: Inflater

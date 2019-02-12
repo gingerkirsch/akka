@@ -4,7 +4,7 @@
 
 package akka.remote.testkit
 
-import java.nio.file.{ FileSystems, Files, Path }
+import java.nio.file.{FileSystems, Files, Path}
 
 import akka.remote.RARP
 import akka.remote.artery.FlightRecorderReader

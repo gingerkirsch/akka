@@ -7,14 +7,14 @@ package akka.stream.impl.io
 import java.io.OutputStream
 
 import akka.Done
-import akka.actor.{ ActorLogging, Deploy, Props }
+import akka.actor.{ActorLogging, Deploy, Props}
 import akka.annotation.InternalApi
-import akka.stream.actor.{ ActorSubscriberMessage, WatermarkRequestStrategy }
-import akka.stream.{ AbruptIOTerminationException, IOResult }
+import akka.stream.actor.{ActorSubscriberMessage, WatermarkRequestStrategy}
+import akka.stream.{AbruptIOTerminationException, IOResult}
 import akka.util.ByteString
 
 import scala.concurrent.Promise
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /** INTERNAL API */
 @InternalApi private[akka] object OutputStreamSubscriber {
@@ -26,9 +26,12 @@ import scala.util.{ Failure, Success }
 }
 
 /** INTERNAL API */
-@InternalApi private[akka] class OutputStreamSubscriber(os: OutputStream, completionPromise: Promise[IOResult], bufSize: Int, autoFlush: Boolean)
-  extends akka.stream.actor.ActorSubscriber
-  with ActorLogging {
+@InternalApi private[akka] class OutputStreamSubscriber(os: OutputStream,
+                                                        completionPromise: Promise[IOResult],
+                                                        bufSize: Int,
+                                                        autoFlush: Boolean)
+    extends akka.stream.actor.ActorSubscriber
+    with ActorLogging {
 
   override protected val requestStrategy = WatermarkRequestStrategy(highWatermark = bufSize)
 

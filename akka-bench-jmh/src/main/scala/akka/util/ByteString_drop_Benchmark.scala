@@ -6,7 +6,7 @@ package akka.util
 
 import java.util.concurrent.TimeUnit
 
-import akka.util.ByteString.{ ByteString1, ByteStrings }
+import akka.util.ByteString.{ByteString1, ByteStrings}
 import org.openjdk.jmh.annotations._
 
 import scala.util.Random

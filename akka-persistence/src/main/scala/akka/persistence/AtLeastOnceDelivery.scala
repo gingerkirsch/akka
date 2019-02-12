@@ -7,7 +7,7 @@ package akka.persistence
 import scala.collection.immutable
 import scala.concurrent.duration.FiniteDuration
 
-import akka.actor.{ ActorPath, ActorSelection, NotInfluenceReceiveTimeout }
+import akka.actor.{ActorPath, ActorSelection, NotInfluenceReceiveTimeout}
 import akka.persistence.serialization.Message
 import akka.actor.Cancellable
 import akka.actor.DeadLetterSuppression
@@ -24,8 +24,9 @@ object AtLeastOnceDelivery {
    * with [[AtLeastOnceDeliveryLike#setDeliverySnapshot]].
    */
   @SerialVersionUID(1L)
-  case class AtLeastOnceDeliverySnapshot(currentDeliveryId: Long, unconfirmedDeliveries: immutable.Seq[UnconfirmedDelivery])
-    extends Message {
+  case class AtLeastOnceDeliverySnapshot(currentDeliveryId: Long,
+                                         unconfirmedDeliveries: immutable.Seq[UnconfirmedDelivery])
+      extends Message {
 
     /**
      * Java API
@@ -42,6 +43,7 @@ object AtLeastOnceDelivery {
    */
   @SerialVersionUID(1L)
   case class UnconfirmedWarning(unconfirmedDeliveries: immutable.Seq[UnconfirmedDelivery]) {
+
     /**
      * Java API
      */
@@ -56,6 +58,7 @@ object AtLeastOnceDelivery {
    * and [[AtLeastOnceDeliverySnapshot]].
    */
   case class UnconfirmedDelivery(deliveryId: Long, destination: ActorPath, message: Any) {
+
     /**
      * Java API
      */
@@ -238,7 +241,8 @@ trait AtLeastOnceDeliveryLike extends Eventsourced {
     if (redeliverTask.isEmpty) {
       val interval = redeliverInterval / 2
       redeliverTask = Some(
-        context.system.scheduler.schedule(interval, interval, self, RedeliveryTick)(context.dispatcher))
+        context.system.scheduler.schedule(interval, interval, self, RedeliveryTick)(context.dispatcher)
+      )
     }
   }
 
@@ -259,7 +263,8 @@ trait AtLeastOnceDeliveryLike extends Eventsourced {
   private[akka] final def internalDeliver(destination: ActorPath)(deliveryIdToMessage: Long => Any): Unit = {
     if (unconfirmed.size >= maxUnconfirmedMessages)
       throw new MaxUnconfirmedMessagesExceededException(
-        s"Too many unconfirmed messages, maximum allowed is [$maxUnconfirmedMessages]")
+        s"Too many unconfirmed messages, maximum allowed is [$maxUnconfirmedMessages]"
+      )
 
     val deliveryId = nextDeliverySequenceNr()
     val now = if (recoveryRunning) { System.nanoTime() - redeliverInterval.toNanos } else System.nanoTime()
@@ -277,9 +282,12 @@ trait AtLeastOnceDeliveryLike extends Eventsourced {
   @InternalApi
   private[akka] final def internalDeliver(destination: ActorSelection)(deliveryIdToMessage: Long => Any): Unit = {
     val isWildcardSelection = destination.pathString.contains("*")
-    require(!isWildcardSelection, "Delivering to wildcard actor selections is not supported by AtLeastOnceDelivery. " +
+    require(
+      !isWildcardSelection,
+      "Delivering to wildcard actor selections is not supported by AtLeastOnceDelivery. " +
       "Introduce an mediator Actor which this AtLeastOnceDelivery Actor will deliver the messages to," +
-      "and will handle the logic of fan-out and collecting individual confirmations, until it can signal confirmation back to this Actor.")
+      "and will handle the logic of fan-out and collecting individual confirmations, until it can signal confirmation back to this Actor."
+    )
     internalDeliver(ActorPath.fromString(destination.toSerializationFormat))(deliveryIdToMessage)
   }
 
@@ -308,8 +316,7 @@ trait AtLeastOnceDeliveryLike extends Eventsourced {
     val deadline = now - redeliverInterval.toNanos
     var warnings = Vector.empty[UnconfirmedDelivery]
 
-    unconfirmed
-      .iterator
+    unconfirmed.iterator
       .filter { case (_, delivery) => delivery.timestamp <= deadline }
       .take(redeliveryBurstLimit)
       .foreach {
@@ -344,7 +351,10 @@ trait AtLeastOnceDeliveryLike extends Eventsourced {
   def getDeliverySnapshot: AtLeastOnceDeliverySnapshot =
     AtLeastOnceDeliverySnapshot(
       deliverySequenceNr,
-      unconfirmed.iterator.map { case (deliveryId, d) => UnconfirmedDelivery(deliveryId, d.destination, d.message) }.to(immutable.IndexedSeq))
+      unconfirmed.iterator
+        .map { case (deliveryId, d) => UnconfirmedDelivery(deliveryId, d.destination, d.message) }
+        .to(immutable.IndexedSeq)
+    )
 
   /**
    * If snapshot from [[#getDeliverySnapshot]] was saved it will be received during recovery
@@ -353,8 +363,9 @@ trait AtLeastOnceDeliveryLike extends Eventsourced {
   def setDeliverySnapshot(snapshot: AtLeastOnceDeliverySnapshot): Unit = {
     deliverySequenceNr = snapshot.currentDeliveryId
     val now = System.nanoTime()
-    unconfirmed = scala.collection.immutable.SortedMap.from(snapshot.unconfirmedDeliveries.iterator.map(d =>
-      d.deliveryId -> Delivery(d.destination, d.message, now, 0)))
+    unconfirmed = scala.collection.immutable.SortedMap.from(
+      snapshot.unconfirmedDeliveries.iterator.map(d => d.deliveryId -> Delivery(d.destination, d.message, now, 0))
+    )
   }
 
   /**
@@ -403,7 +414,10 @@ trait AtLeastOnceDeliveryLike extends Eventsourced {
  * @see [[AtLeastOnceDeliveryLike]]
  */
 @deprecated("Use AbstractPersistentActorWithAtLeastOnceDelivery instead.", since = "2.5.0")
-abstract class UntypedPersistentActorWithAtLeastOnceDelivery extends UntypedPersistentActor with AtLeastOnceDeliveryLike {
+abstract class UntypedPersistentActorWithAtLeastOnceDelivery
+    extends UntypedPersistentActor
+    with AtLeastOnceDeliveryLike {
+
   /**
    * Java API: Send the message created by the `deliveryIdToMessage` function to
    * the `destination` actor. It will retry sending the message until
@@ -461,7 +475,10 @@ abstract class UntypedPersistentActorWithAtLeastOnceDelivery extends UntypedPers
  * @see [[AtLeastOnceDelivery]]
  * @see [[AtLeastOnceDeliveryLike]]
  */
-abstract class AbstractPersistentActorWithAtLeastOnceDelivery extends AbstractPersistentActor with AtLeastOnceDeliveryLike {
+abstract class AbstractPersistentActorWithAtLeastOnceDelivery
+    extends AbstractPersistentActor
+    with AtLeastOnceDeliveryLike {
+
   /**
    * Java API: Send the message created by the `deliveryIdToMessage` function to
    * the `destination` actor. It will retry sending the message until

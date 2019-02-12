@@ -4,11 +4,11 @@
 
 package akka.stream
 
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.remote.artery.{ BenchTestSource, LatchSink }
+import akka.remote.artery.{BenchTestSource, LatchSink}
 import akka.stream.impl.fusing.GraphStages
 import akka.stream.scaladsl._
 import akka.stream.testkit.scaladsl.StreamTestKit

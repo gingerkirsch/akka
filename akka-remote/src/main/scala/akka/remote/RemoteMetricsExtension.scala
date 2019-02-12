@@ -36,6 +36,7 @@ private[akka] object RemoteMetricsExtension extends ExtensionId[RemoteMetrics] w
  * INTERNAL API
  */
 private[akka] trait RemoteMetrics extends Extension {
+
   /**
    * Logging of the size of different message types.
    * Maximum detected size per message type is logged once, with

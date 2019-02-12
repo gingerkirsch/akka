@@ -4,14 +4,14 @@
 
 package akka.stream.impl.io
 
-import java.io.{ IOException, OutputStream }
-import java.util.concurrent.{ Semaphore, TimeUnit }
+import java.io.{IOException, OutputStream}
+import java.util.concurrent.{Semaphore, TimeUnit}
 
 import akka.stream.Attributes.InputBuffer
 import akka.stream.impl.Stages.DefaultAttributes
 import akka.stream.impl.io.OutputStreamSourceStage._
 import akka.stream.stage._
-import akka.stream.{ Attributes, Outlet, SourceShape }
+import akka.stream.{Attributes, Outlet, SourceShape}
 import akka.util.ByteString
 
 import scala.concurrent.Await
@@ -24,7 +24,8 @@ private[stream] object OutputStreamSourceStage {
   case object Close extends AdapterToStageMessage
 }
 
-final private[stream] class OutputStreamSourceStage(writeTimeout: FiniteDuration) extends GraphStageWithMaterializedValue[SourceShape[ByteString], OutputStream] {
+final private[stream] class OutputStreamSourceStage(writeTimeout: FiniteDuration)
+    extends GraphStageWithMaterializedValue[SourceShape[ByteString], OutputStream] {
   val out = Outlet[ByteString]("OutputStreamSource.out")
   override def initialAttributes = DefaultAttributes.outputStreamSource
   override val shape: SourceShape[ByteString] = SourceShape.of(out)
@@ -56,8 +57,7 @@ final private[stream] class OutputStreamSourceStage(writeTimeout: FiniteDuration
       }
 
       setHandler(out, new OutHandler {
-        override def onPull(): Unit = {
-        }
+        override def onPull(): Unit = {}
       })
     }
 
@@ -66,11 +66,10 @@ final private[stream] class OutputStreamSourceStage(writeTimeout: FiniteDuration
   }
 }
 
-private[akka] class OutputStreamAdapter(
-  unfulfilledDemand: Semaphore,
-  sendToStage:       AsyncCallback[AdapterToStageMessage],
-  writeTimeout:      FiniteDuration)
-  extends OutputStream {
+private[akka] class OutputStreamAdapter(unfulfilledDemand: Semaphore,
+                                        sendToStage: AsyncCallback[AdapterToStageMessage],
+                                        writeTimeout: FiniteDuration)
+    extends OutputStream {
 
   @scala.throws(classOf[IOException])
   private[this] def sendData(data: ByteString): Unit = {

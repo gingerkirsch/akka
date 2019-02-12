@@ -4,7 +4,7 @@
 
 package akka.stream.stage
 
-import akka.event.{ LoggingAdapter, NoLogging }
+import akka.event.{LoggingAdapter, NoLogging}
 import akka.stream.MaterializerLoggingProvider
 
 /**

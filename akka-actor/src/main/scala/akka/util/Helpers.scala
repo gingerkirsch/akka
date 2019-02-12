@@ -12,7 +12,7 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import java.util.Locale
-import java.time.{ Instant, ZoneId, LocalDateTime }
+import java.time.{Instant, LocalDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
 
 object Helpers {
@@ -21,7 +21,8 @@ object Helpers {
 
   val isWindows: Boolean = toRootLowerCase(System.getProperty("os.name", "")).indexOf("win") >= 0
 
-  def makePattern(s: String): Pattern = Pattern.compile("^\\Q" + s.replace("?", "\\E.\\Q").replace("*", "\\E.*\\Q") + "\\E$")
+  def makePattern(s: String): Pattern =
+    Pattern.compile("^\\Q" + s.replace("?", "\\E.\\Q").replace("*", "\\E.*\\Q") + "\\E$")
 
   def compareIdentityHash(a: AnyRef, b: AnyRef): Int = {
     /*
@@ -76,7 +77,7 @@ object Helpers {
 
   @tailrec
   def base64(l: Long, sb: java.lang.StringBuilder = new java.lang.StringBuilder("$")): String = {
-    sb append base64chars.charAt(l.toInt & 63)
+    sb.append(base64chars.charAt(l.toInt & 63))
     val next = l >>> 6
     if (next == 0) sb.toString
     else base64(next, sb)
@@ -101,6 +102,7 @@ object Helpers {
    * @param value The value to check.
    */
   @inline final implicit class Requiring[A](val value: A) extends AnyVal {
+
     /**
      * Check that a condition is true. If true, return `value`, otherwise throw
      * an `IllegalArgumentException` with the given message.

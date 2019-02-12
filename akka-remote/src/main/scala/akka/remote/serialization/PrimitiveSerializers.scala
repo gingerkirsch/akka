@@ -4,10 +4,10 @@
 
 package akka.remote.serialization
 
-import java.nio.{ BufferOverflowException, ByteBuffer }
+import java.nio.{BufferOverflowException, ByteBuffer}
 
 import akka.actor.ExtendedActorSystem
-import akka.serialization.{ BaseSerializer, ByteBufferSerializer }
+import akka.serialization.{BaseSerializer, ByteBufferSerializer}
 import akka.util.ByteString
 
 class LongSerializer(val system: ExtendedActorSystem) extends BaseSerializer with ByteBufferSerializer {

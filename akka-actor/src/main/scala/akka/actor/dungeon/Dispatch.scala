@@ -7,13 +7,13 @@ package akka.actor.dungeon
 import scala.annotation.tailrec
 
 import akka.AkkaException
-import akka.dispatch.{ Envelope, Mailbox }
+import akka.dispatch.{Envelope, Mailbox}
 import akka.dispatch.sysmsg._
 import akka.event.Logging.Error
 import akka.util.Unsafe
 import akka.actor._
-import akka.serialization.{ DisabledJavaSerializer, SerializationExtension, Serializers }
-import scala.util.control.{ NoStackTrace, NonFatal }
+import akka.serialization.{DisabledJavaSerializer, SerializationExtension, Serializers}
+import scala.util.control.{NoStackTrace, NonFatal}
 import scala.util.control.Exception.Catcher
 
 import akka.dispatch.MailboxType
@@ -23,18 +23,24 @@ import akka.serialization.Serialization
 
 @SerialVersionUID(1L)
 final case class SerializationCheckFailedException private (msg: Object, cause: Throwable)
-  extends AkkaException(s"Failed to serialize and deserialize message of type ${msg.getClass.getName} for testing. " +
-    "To avoid this error, either disable 'akka.actor.serialize-messages', mark the message with 'akka.actor.NoSerializationVerificationNeeded', or configure serialization to support this message", cause)
+    extends AkkaException(
+      s"Failed to serialize and deserialize message of type ${msg.getClass.getName} for testing. " +
+      "To avoid this error, either disable 'akka.actor.serialize-messages', mark the message with 'akka.actor.NoSerializationVerificationNeeded', or configure serialization to support this message",
+      cause
+    )
 
 private[akka] trait Dispatch { this: ActorCell =>
 
-  @volatile private var _mailboxDoNotCallMeDirectly: Mailbox = _ //This must be volatile since it isn't protected by the mailbox status
+  @volatile private var _mailboxDoNotCallMeDirectly
+    : Mailbox = _ //This must be volatile since it isn't protected by the mailbox status
 
-  @inline final def mailbox: Mailbox = Unsafe.instance.getObjectVolatile(this, AbstractActorCell.mailboxOffset).asInstanceOf[Mailbox]
+  @inline final def mailbox: Mailbox =
+    Unsafe.instance.getObjectVolatile(this, AbstractActorCell.mailboxOffset).asInstanceOf[Mailbox]
 
   @tailrec final def swapMailbox(newMailbox: Mailbox): Mailbox = {
     val oldMailbox = mailbox
-    if (!Unsafe.instance.compareAndSwapObject(this, AbstractActorCell.mailboxOffset, oldMailbox, newMailbox)) swapMailbox(newMailbox)
+    if (!Unsafe.instance.compareAndSwapObject(this, AbstractActorCell.mailboxOffset, oldMailbox, newMailbox))
+      swapMailbox(newMailbox)
     else oldMailbox
   }
 
@@ -67,12 +73,10 @@ private[akka] trait Dispatch { this: ActorCell =>
     val createMessage = mailboxType match {
       case _: ProducesMessageQueue[_] if system.mailboxes.hasRequiredType(actorClass) =>
         val req = system.mailboxes.getRequiredType(actorClass)
-        if (req isInstance mbox.messageQueue) Create(None)
+        if (req.isInstance(mbox.messageQueue)) Create(None)
         else {
           val gotType = if (mbox.messageQueue == null) "null" else mbox.messageQueue.getClass.getName
-          Create(Some(ActorInitializationException(
-            self,
-            s"Actor [$self] requires mailbox type [$req] got [$gotType]")))
+          Create(Some(ActorInitializationException(self, s"Actor [$self] requires mailbox type [$req] got [$gotType]")))
         }
       case _ => Create(None)
     }
@@ -122,16 +126,24 @@ private[akka] trait Dispatch { this: ActorCell =>
   }
 
   // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
-  final def suspend(): Unit = try dispatcher.systemDispatch(this, Suspend()) catch handleException
+  final def suspend(): Unit =
+    try dispatcher.systemDispatch(this, Suspend())
+    catch handleException
 
   // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
-  final def resume(causedByFailure: Throwable): Unit = try dispatcher.systemDispatch(this, Resume(causedByFailure)) catch handleException
+  final def resume(causedByFailure: Throwable): Unit =
+    try dispatcher.systemDispatch(this, Resume(causedByFailure))
+    catch handleException
 
   // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
-  final def restart(cause: Throwable): Unit = try dispatcher.systemDispatch(this, Recreate(cause)) catch handleException
+  final def restart(cause: Throwable): Unit =
+    try dispatcher.systemDispatch(this, Recreate(cause))
+    catch handleException
 
   // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
-  final def stop(): Unit = try dispatcher.systemDispatch(this, Terminate()) catch handleException
+  final def stop(): Unit =
+    try dispatcher.systemDispatch(this, Terminate())
+    catch handleException
 
   def sendMessage(msg: Envelope): Unit =
     try {
@@ -182,6 +194,8 @@ private[akka] trait Dispatch { this: ActorCell =>
     }
   }
 
-  override def sendSystemMessage(message: SystemMessage): Unit = try dispatcher.systemDispatch(this, message) catch handleException
+  override def sendSystemMessage(message: SystemMessage): Unit =
+    try dispatcher.systemDispatch(this, message)
+    catch handleException
 
 }

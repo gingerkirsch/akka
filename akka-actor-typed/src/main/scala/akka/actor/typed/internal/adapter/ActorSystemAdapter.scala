@@ -11,7 +11,7 @@ import java.util.concurrent.CompletionStage
 import akka.actor
 import akka.actor.ExtendedActorSystem
 import akka.actor.InvalidMessageException
-import akka.{ actor => untyped }
+import akka.{actor => untyped}
 import scala.concurrent.ExecutionContextExecutor
 
 import akka.util.Timeout
@@ -30,7 +30,11 @@ import akka.actor.ActorRefProvider
  * most circumstances.
  */
 @InternalApi private[akka] class ActorSystemAdapter[-T](val untypedSystem: untyped.ActorSystemImpl)
-  extends ActorSystem[T] with ActorRef[T] with internal.ActorRefImpl[T] with internal.InternalRecipientRef[T] with ExtensionsImpl {
+    extends ActorSystem[T]
+    with ActorRef[T]
+    with internal.ActorRefImpl[T]
+    with internal.InternalRecipientRef[T]
+    with ExtensionsImpl {
 
   untypedSystem.assertInitialized()
 
@@ -52,7 +56,8 @@ import akka.actor.ActorRefProvider
   // impl InternalRecipientRef
   def isTerminated: Boolean = whenTerminated.isCompleted
 
-  final override val path: untyped.ActorPath = untyped.RootActorPath(untyped.Address("akka", untypedSystem.name)) / "user"
+  final override val path
+    : untyped.ActorPath = untyped.RootActorPath(untyped.Address("akka", untypedSystem.name)) / "user"
 
   override def toString: String = untypedSystem.toString
 
@@ -87,7 +92,9 @@ import akka.actor.ActorRefProvider
   override lazy val getWhenTerminated: CompletionStage[akka.actor.typed.Terminated] =
     FutureConverters.toJava(whenTerminated)
 
-  def systemActorOf[U](behavior: Behavior[U], name: String, props: Props)(implicit timeout: Timeout): Future[ActorRef[U]] = {
+  def systemActorOf[U](behavior: Behavior[U], name: String, props: Props)(
+      implicit timeout: Timeout
+  ): Future[ActorRef[U]] = {
     val ref = untypedSystem.systemActorOf(PropsAdapter(() => behavior, props), name)
     Future.successful(ActorRefAdapter(ref))
   }
@@ -129,7 +136,10 @@ private[akka] object ActorSystemAdapter {
   def toUntyped[U](sys: ActorSystem[_]): untyped.ActorSystem =
     sys match {
       case adapter: ActorSystemAdapter[_] => adapter.untypedSystem
-      case _ => throw new UnsupportedOperationException("only adapted untyped ActorSystem permissible " +
-        s"($sys of class ${sys.getClass.getName})")
+      case _ =>
+        throw new UnsupportedOperationException(
+          "only adapted untyped ActorSystem permissible " +
+          s"($sys of class ${sys.getClass.getName})"
+        )
     }
 }

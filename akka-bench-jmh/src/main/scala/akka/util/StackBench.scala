@@ -6,7 +6,7 @@ package akka.util
 
 import java.util.concurrent.TimeUnit
 
-import org.openjdk.jmh.annotations.{ Benchmark, Measurement, Scope, State }
+import org.openjdk.jmh.annotations.{Benchmark, Measurement, Scope, State}
 
 @State(Scope.Benchmark)
 @Measurement(timeUnit = TimeUnit.MICROSECONDS)

@@ -7,13 +7,15 @@ package akka.actor.typed.internal
 import java.io.NotSerializableException
 import java.nio.charset.StandardCharsets
 
-import akka.actor.typed.{ ActorRef, ActorRefResolver }
+import akka.actor.typed.{ActorRef, ActorRefResolver}
 import akka.actor.typed.scaladsl.adapter._
 import akka.annotation.InternalApi
-import akka.serialization.{ BaseSerializer, SerializerWithStringManifest }
+import akka.serialization.{BaseSerializer, SerializerWithStringManifest}
 
 @InternalApi
-class MiscMessageSerializer(val system: akka.actor.ExtendedActorSystem) extends SerializerWithStringManifest with BaseSerializer {
+class MiscMessageSerializer(val system: akka.actor.ExtendedActorSystem)
+    extends SerializerWithStringManifest
+    with BaseSerializer {
 
   // Serializers are initialized early on. `toTyped` might then try to initialize the untyped ActorSystemAdapter extension.
   private lazy val resolver = ActorRefResolver(system.toTyped)
@@ -35,7 +37,8 @@ class MiscMessageSerializer(val system: akka.actor.ExtendedActorSystem) extends 
     case ActorRefManifest => resolver.resolveActorRef(new String(bytes, StandardCharsets.UTF_8))
     case _ =>
       throw new NotSerializableException(
-        s"Unimplemented deserialization of message with manifest [$manifest] in [${getClass.getName}]")
+        s"Unimplemented deserialization of message with manifest [$manifest] in [${getClass.getName}]"
+      )
   }
 
 }

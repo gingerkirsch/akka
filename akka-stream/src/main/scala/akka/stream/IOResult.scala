@@ -7,7 +7,7 @@ package akka.stream
 import akka.Done
 
 import scala.util.control.NoStackTrace
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * Holds a result of an IO operation.
@@ -57,4 +57,5 @@ object IOResult {
  * while there was still IO operations in progress.
  */
 final case class AbruptIOTerminationException(ioResult: IOResult, cause: Throwable)
-  extends RuntimeException("Stream terminated without completing IO operation.", cause) with NoStackTrace
+    extends RuntimeException("Stream terminated without completing IO operation.", cause)
+    with NoStackTrace

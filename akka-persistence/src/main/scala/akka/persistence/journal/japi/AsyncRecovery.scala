@@ -8,7 +8,7 @@ import java.util.function.Consumer
 import scala.concurrent.Future
 
 import akka.actor.Actor
-import akka.persistence.journal.{ AsyncRecovery => SAsyncReplay }
+import akka.persistence.journal.{AsyncRecovery => SAsyncReplay}
 import akka.persistence.PersistentRepr
 
 /**
@@ -17,7 +17,9 @@ import akka.persistence.PersistentRepr
 abstract class AsyncRecovery extends SAsyncReplay with AsyncRecoveryPlugin { this: Actor =>
   import context.dispatcher
 
-  final def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(replayCallback: (PersistentRepr) => Unit) =
+  final def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(
+      replayCallback: (PersistentRepr) => Unit
+  ) =
     doAsyncReplayMessages(persistenceId, fromSequenceNr, toSequenceNr, max, new Consumer[PersistentRepr] {
       def accept(p: PersistentRepr) = replayCallback(p)
     }).map(Unit.unbox)

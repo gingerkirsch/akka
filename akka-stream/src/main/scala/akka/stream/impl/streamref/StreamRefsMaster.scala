@@ -4,7 +4,7 @@
 
 package akka.stream.impl.streamref
 
-import akka.actor.{ ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
+import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.annotation.InternalApi
 import akka.event.Logging
 import akka.stream.impl.SeqActorName

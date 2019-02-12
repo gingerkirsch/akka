@@ -89,7 +89,6 @@ private[remote] object FlightRecorderEvents {
     Transport_RemovedQuarantined -> "Transport: Removed idle quarantined association",
     Transport_RestartOutbound -> "Transport: Restart outbound",
     Transport_RestartInbound -> "Transport: Restart outbound",
-
     // Aeron Sink events
     AeronSink_Started -> "AeronSink: Started",
     AeronSink_TaskRunnerRemoved -> "AeronSink: Task runner removed",
@@ -100,14 +99,12 @@ private[remote] object FlightRecorderEvents {
     AeronSink_GaveUpEnvelope -> "AeronSink: Gave up envelope",
     AeronSink_DelegateToTaskRunner -> "AeronSink: Delegate to task runner",
     AeronSink_ReturnFromTaskRunner -> "AeronSink: Return from task runner",
-
     // Aeron Source events
     AeronSource_Started -> "AeronSource: Started",
     AeronSource_Stopped -> "AeronSource: Stopped",
     AeronSource_Received -> "AeronSource: Received",
     AeronSource_DelegateToTaskRunner -> "AeronSource: Delegate to task runner",
     AeronSource_ReturnFromTaskRunner -> "AeronSource: Return from task runner",
-
     // Compression events
     Compression_CompressedActorRef -> "Compression: Compressed ActorRef",
     Compression_AllocatedActorRefCompressionId -> "Compression: Allocated ActorRef compression id",
@@ -115,17 +112,14 @@ private[remote] object FlightRecorderEvents {
     Compression_AllocatedManifestCompressionId -> "Compression: Allocated manifest compression id",
     Compression_Inbound_RunActorRefAdvertisement -> "InboundCompression: Run class manifest compression advertisement",
     Compression_Inbound_RunClassManifestAdvertisement -> "InboundCompression: Run class manifest compression advertisement",
-
     // TCP outbound events
     TcpOutbound_Connected -> "TCP out: Connected",
     TcpOutbound_Sent -> "TCP out: Sent message",
-
     // TCP inbound events
     TcpInbound_Bound -> "TCP in: Bound",
     TcpInbound_Unbound -> "TCP in: Unbound",
     TcpInbound_Connected -> "TCP in: New connection",
     TcpInbound_Received -> "TCP in: Received message"
-
   ).map { case (int, str) => int.toLong -> str }
 
 }

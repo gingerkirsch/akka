@@ -110,19 +110,19 @@ import akka.stream._
     val actorPublisherSource = name("actorPublisherSource")
     val actorRefSource = name("actorRefSource")
     val queueSource = name("queueSource")
-    val inputStreamSource = name("inputStreamSource") and IODispatcher
-    val outputStreamSource = name("outputStreamSource") and IODispatcher
-    val fileSource = name("fileSource") and IODispatcher
-    val unfoldResourceSource = name("unfoldResourceSource") and IODispatcher
-    val unfoldResourceSourceAsync = name("unfoldResourceSourceAsync") and IODispatcher
-    val asJavaStream = name("asJavaStream") and IODispatcher
+    val inputStreamSource = name("inputStreamSource").and(IODispatcher)
+    val outputStreamSource = name("outputStreamSource").and(IODispatcher)
+    val fileSource = name("fileSource").and(IODispatcher)
+    val unfoldResourceSource = name("unfoldResourceSource").and(IODispatcher)
+    val unfoldResourceSourceAsync = name("unfoldResourceSourceAsync").and(IODispatcher)
+    val asJavaStream = name("asJavaStream").and(IODispatcher)
     val javaCollectorParallelUnordered = name("javaCollectorParallelUnordered")
     val javaCollector = name("javaCollector")
 
     val subscriberSink = name("subscriberSink")
     val cancelledSink = name("cancelledSink")
-    val headSink = name("headSink") and inputBufferOne
-    val headOptionSink = name("headOptionSink") and inputBufferOne
+    val headSink = name("headSink").and(inputBufferOne)
+    val headOptionSink = name("headOptionSink").and(inputBufferOne)
     val lastSink = name("lastSink")
     val lastOptionSink = name("lastOptionSink")
     val takeLastSink = name("takeLastSink")
@@ -137,9 +137,9 @@ import akka.stream._
     val lazySink = name("lazySink")
     val lazyFlow = name("lazyFlow")
     val lazySource = name("lazySource")
-    val outputStreamSink = name("outputStreamSink") and IODispatcher
-    val inputStreamSink = name("inputStreamSink") and IODispatcher
-    val fileSink = name("fileSink") and IODispatcher
+    val outputStreamSink = name("outputStreamSink").and(IODispatcher)
+    val inputStreamSink = name("inputStreamSink").and(IODispatcher)
+    val fileSink = name("fileSink").and(IODispatcher)
     val fromJavaStream = name("fromJavaStream")
   }
 

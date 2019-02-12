@@ -6,7 +6,7 @@ package akka.io.dns
 
 import akka.util.JavaDurationConverters._
 
-import scala.concurrent.duration.{ Duration, FiniteDuration, _ }
+import scala.concurrent.duration.{Duration, FiniteDuration, _}
 
 object CachePolicy {
 

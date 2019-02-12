@@ -47,9 +47,18 @@ class PersistentActorWithAtLeastOnceDeliveryBenchmark {
 
     destinationActor = system.actorOf(Props[DestinationActor], "destination")
 
-    noPersistPersistentActorWithAtLeastOnceDelivery = system.actorOf(Props(classOf[NoPersistPersistentActorWithAtLeastOnceDelivery], dataCount, probe.ref, destinationActor.path), "nop-1")
-    persistPersistentActorWithAtLeastOnceDelivery = system.actorOf(Props(classOf[PersistPersistentActorWithAtLeastOnceDelivery], dataCount, probe.ref, destinationActor.path), "ep-1")
-    persistAsyncPersistentActorWithAtLeastOnceDelivery = system.actorOf(Props(classOf[PersistAsyncPersistentActorWithAtLeastOnceDelivery], dataCount, probe.ref, destinationActor.path), "epa-1")
+    noPersistPersistentActorWithAtLeastOnceDelivery = system.actorOf(
+      Props(classOf[NoPersistPersistentActorWithAtLeastOnceDelivery], dataCount, probe.ref, destinationActor.path),
+      "nop-1"
+    )
+    persistPersistentActorWithAtLeastOnceDelivery = system.actorOf(
+      Props(classOf[PersistPersistentActorWithAtLeastOnceDelivery], dataCount, probe.ref, destinationActor.path),
+      "ep-1"
+    )
+    persistAsyncPersistentActorWithAtLeastOnceDelivery = system.actorOf(
+      Props(classOf[PersistAsyncPersistentActorWithAtLeastOnceDelivery], dataCount, probe.ref, destinationActor.path),
+      "epa-1"
+    )
   }
 
   @TearDown
@@ -85,7 +94,11 @@ class PersistentActorWithAtLeastOnceDeliveryBenchmark {
   }
 }
 
-class NoPersistPersistentActorWithAtLeastOnceDelivery(respondAfter: Int, val upStream: ActorRef, val downStream: ActorPath) extends PersistentActor with AtLeastOnceDelivery {
+class NoPersistPersistentActorWithAtLeastOnceDelivery(respondAfter: Int,
+                                                      val upStream: ActorRef,
+                                                      val downStream: ActorPath)
+    extends PersistentActor
+    with AtLeastOnceDelivery {
 
   override def redeliverInterval = 100.milliseconds
 
@@ -117,7 +130,11 @@ class NoPersistPersistentActorWithAtLeastOnceDelivery(respondAfter: Int, val upS
   }
 }
 
-class PersistPersistentActorWithAtLeastOnceDelivery(respondAfter: Int, val upStream: ActorRef, val downStream: ActorPath) extends PersistentActor with AtLeastOnceDelivery {
+class PersistPersistentActorWithAtLeastOnceDelivery(respondAfter: Int,
+                                                    val upStream: ActorRef,
+                                                    val downStream: ActorPath)
+    extends PersistentActor
+    with AtLeastOnceDelivery {
 
   override def redeliverInterval = 100.milliseconds
 
@@ -151,7 +168,11 @@ class PersistPersistentActorWithAtLeastOnceDelivery(respondAfter: Int, val upStr
   }
 }
 
-class PersistAsyncPersistentActorWithAtLeastOnceDelivery(respondAfter: Int, val upStream: ActorRef, val downStream: ActorPath) extends PersistentActor with AtLeastOnceDelivery {
+class PersistAsyncPersistentActorWithAtLeastOnceDelivery(respondAfter: Int,
+                                                         val upStream: ActorRef,
+                                                         val downStream: ActorPath)
+    extends PersistentActor
+    with AtLeastOnceDelivery {
 
   override def redeliverInterval = 100.milliseconds
 

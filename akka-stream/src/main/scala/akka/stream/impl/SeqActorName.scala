@@ -6,7 +6,7 @@ package akka.stream.impl
 
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.annotation.{ DoNotInherit, InternalApi }
+import akka.annotation.{DoNotInherit, InternalApi}
 
 /**
  * INTERNAL API

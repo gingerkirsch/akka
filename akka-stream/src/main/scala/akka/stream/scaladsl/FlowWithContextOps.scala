@@ -49,7 +49,9 @@ trait FlowWithContextOps[+Ctx, +Out, +Mat] {
    *
    * @see [[akka.stream.scaladsl.FlowOps.viaMat]]
    */
-  def viaMat[Ctx2, Out2, Mat2, Mat3](flow: Graph[FlowShape[(Out, Ctx), (Out2, Ctx2)], Mat2])(combine: (Mat, Mat2) => Mat3): ReprMat[Ctx2, Out2, Mat3]
+  def viaMat[Ctx2, Out2, Mat2, Mat3](flow: Graph[FlowShape[(Out, Ctx), (Out2, Ctx2)], Mat2])(
+      combine: (Mat, Mat2) => Mat3
+  ): ReprMat[Ctx2, Out2, Mat3]
 
   /**
    * Context-preserving variant of [[akka.stream.scaladsl.FlowOps.map]].
@@ -65,7 +67,9 @@ trait FlowWithContextOps[+Ctx, +Out, +Mat] {
    * @see [[akka.stream.scaladsl.FlowOps.mapAsync]]
    */
   def mapAsync[Out2](parallelism: Int)(f: Out => Future[Out2]): Repr[Ctx, Out2] =
-    via(flow.mapAsync(parallelism) { case (e, ctx) => f(e).map(o => (o, ctx))(ExecutionContexts.sameThreadExecutionContext) })
+    via(flow.mapAsync(parallelism) {
+      case (e, ctx) => f(e).map(o => (o, ctx))(ExecutionContexts.sameThreadExecutionContext)
+    })
 
   /**
    * Context-preserving variant of [[akka.stream.scaladsl.FlowOps.collect]].
@@ -196,10 +200,11 @@ trait FlowWithContextOps[+Ctx, +Out, +Mat] {
   def statefulMapConcat[Out2](f: () => Out => immutable.Iterable[Out2]): Repr[Ctx, Out2] = {
     val fCtx: () => ((Out, Ctx)) => immutable.Iterable[(Out2, Ctx)] = () => {
       val plainFun = f()
-      elWithContext => {
-        val (el, ctx) = elWithContext
-        plainFun(el).map(o => (o, ctx))
-      }
+      elWithContext =>
+        {
+          val (el, ctx) = elWithContext
+          plainFun(el).map(o => (o, ctx))
+        }
     }
     via(flow.statefulMapConcat(fCtx))
   }

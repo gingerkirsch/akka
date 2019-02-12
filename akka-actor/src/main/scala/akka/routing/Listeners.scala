@@ -4,8 +4,8 @@
 
 package akka.routing
 
-import akka.actor.{ Actor, ActorRef }
-import java.util.{ Set, TreeSet }
+import akka.actor.{Actor, ActorRef}
+import java.util.{Set, TreeSet}
 
 sealed trait ListenerMessage
 final case class Listen(listener: ActorRef) extends ListenerMessage
@@ -32,8 +32,8 @@ trait Listeners { self: Actor =>
    * {{{ def receive = listenerManagement orElse … }}}
    */
   protected def listenerManagement: Actor.Receive = {
-    case Listen(l) => listeners add l
-    case Deafen(l) => listeners remove l
+    case Listen(l) => listeners.add(l)
+    case Deafen(l) => listeners.remove(l)
     case WithListeners(f) =>
       val i = listeners.iterator
       while (i.hasNext) f(i.next)

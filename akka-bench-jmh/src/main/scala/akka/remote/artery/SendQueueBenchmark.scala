@@ -57,8 +57,10 @@ class SendQueueBenchmark {
 
     val source = Source.queue[Int](1024, OverflowStrategy.dropBuffer)
 
-    val (queue, killSwitch) = source.viaMat(KillSwitches.single)(Keep.both)
-      .toMat(new BarrierSink(N, latch, burstSize, barrier))(Keep.left).run()(materializer)
+    val (queue, killSwitch) = source
+      .viaMat(KillSwitches.single)(Keep.both)
+      .toMat(new BarrierSink(N, latch, burstSize, barrier))(Keep.left)
+      .run()(materializer)
 
     var n = 1
     while (n <= N) {
@@ -84,8 +86,10 @@ class SendQueueBenchmark {
 
     val source = Source.actorRef(1024, OverflowStrategy.dropBuffer)
 
-    val (ref, killSwitch) = source.viaMat(KillSwitches.single)(Keep.both)
-      .toMat(new BarrierSink(N, latch, burstSize, barrier))(Keep.left).run()(materializer)
+    val (ref, killSwitch) = source
+      .viaMat(KillSwitches.single)(Keep.both)
+      .toMat(new BarrierSink(N, latch, burstSize, barrier))(Keep.left)
+      .run()(materializer)
 
     var n = 1
     while (n <= N) {
@@ -112,8 +116,10 @@ class SendQueueBenchmark {
     val queue = new ManyToOneConcurrentArrayQueue[Int](1024)
     val source = Source.fromGraph(new SendQueue[Int](_ => ()))
 
-    val (sendQueue, killSwitch) = source.viaMat(KillSwitches.single)(Keep.both)
-      .toMat(new BarrierSink(N, latch, burstSize, barrier))(Keep.left).run()(materializer)
+    val (sendQueue, killSwitch) = source
+      .viaMat(KillSwitches.single)(Keep.both)
+      .toMat(new BarrierSink(N, latch, burstSize, barrier))(Keep.left)
+      .run()(materializer)
     sendQueue.inject(queue)
 
     var n = 1

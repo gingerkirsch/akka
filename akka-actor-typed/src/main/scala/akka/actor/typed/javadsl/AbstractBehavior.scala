@@ -4,7 +4,7 @@
 
 package akka.actor.typed.javadsl
 
-import akka.actor.typed.{ Behavior, ExtensibleBehavior, Signal, TypedActorContext }
+import akka.actor.typed.{Behavior, ExtensibleBehavior, Signal, TypedActorContext}
 import akka.util.OptionVal
 
 /**

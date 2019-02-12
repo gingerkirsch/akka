@@ -5,7 +5,7 @@
 package akka.persistence.query.scaladsl
 
 import akka.NotUsed
-import akka.persistence.query.{ EventEnvelope, Offset }
+import akka.persistence.query.{EventEnvelope, Offset}
 import akka.stream.scaladsl.Source
 
 /**
@@ -21,4 +21,3 @@ trait CurrentEventsByTagQuery extends ReadJournal {
   def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed]
 
 }
-

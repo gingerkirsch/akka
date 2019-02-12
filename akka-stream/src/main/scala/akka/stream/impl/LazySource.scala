@@ -7,10 +7,10 @@ package akka.stream.impl
 import akka.annotation.InternalApi
 import akka.stream._
 import akka.stream.impl.Stages.DefaultAttributes
-import akka.stream.scaladsl.{ Keep, Source }
+import akka.stream.scaladsl.{Keep, Source}
 import akka.stream.stage._
 
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import scala.util.control.NonFatal
 
 /**
@@ -23,7 +23,8 @@ import scala.util.control.NonFatal
 /**
  * INTERNAL API
  */
-@InternalApi private[akka] final class LazySource[T, M](sourceFactory: () => Source[T, M]) extends GraphStageWithMaterializedValue[SourceShape[T], Future[M]] {
+@InternalApi private[akka] final class LazySource[T, M](sourceFactory: () => Source[T, M])
+    extends GraphStageWithMaterializedValue[SourceShape[T], Future[M]] {
   val out = Outlet[T]("LazySource.out")
   override val shape = SourceShape(out)
 

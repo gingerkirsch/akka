@@ -41,10 +41,11 @@ object EventSourcedBehavior {
    * Create a `Behavior` for a persistent actor.
    */
   def apply[Command, Event, State](
-    persistenceId:  PersistenceId,
-    emptyState:     State,
-    commandHandler: (State, Command) => Effect[Event, State],
-    eventHandler:   (State, Event) => State): EventSourcedBehavior[Command, Event, State] = {
+      persistenceId: PersistenceId,
+      emptyState: State,
+      commandHandler: (State, Command) => Effect[Event, State],
+      eventHandler: (State, Event) => State
+  ): EventSourcedBehavior[Command, Event, State] = {
     val loggerClass = LoggerClass.detectLoggerClassFromStack(classOf[EventSourcedBehavior[_, _, _]])
     EventSourcedBehaviorImpl(persistenceId, emptyState, commandHandler, eventHandler, loggerClass)
   }
@@ -55,10 +56,11 @@ object EventSourcedBehavior {
    * created with [[Effect.reply]], [[Effect.noReply]], [[Effect.thenReply]], or [[Effect.thenNoReply]].
    */
   def withEnforcedReplies[Command <: ExpectingReply[_], Event, State](
-    persistenceId:  PersistenceId,
-    emptyState:     State,
-    commandHandler: (State, Command) => ReplyEffect[Event, State],
-    eventHandler:   (State, Event) => State): EventSourcedBehavior[Command, Event, State] = {
+      persistenceId: PersistenceId,
+      emptyState: State,
+      commandHandler: (State, Command) => ReplyEffect[Event, State],
+      eventHandler: (State, Event) => State
+  ): EventSourcedBehavior[Command, Event, State] = {
     val loggerClass = LoggerClass.detectLoggerClassFromStack(classOf[EventSourcedBehavior[_, _, _]])
     EventSourcedBehaviorImpl(persistenceId, emptyState, commandHandler, eventHandler, loggerClass)
   }
@@ -81,7 +83,9 @@ object EventSourcedBehavior {
      *
      * @see [[Effect]] for possible effects of a command.
      */
-    def command[Command, Event, State](commandHandler: Command => Effect[Event, State]): (State, Command) => Effect[Event, State] =
+    def command[Command, Event, State](
+        commandHandler: Command => Effect[Event, State]
+    ): (State, Command) => Effect[Event, State] =
       (_, cmd) => commandHandler(cmd)
 
   }
@@ -101,6 +105,7 @@ object EventSourcedBehavior {
    * The `callback` function is called to notify that the recovery process has finished.
    */
   def onRecoveryCompleted(callback: State => Unit): EventSourcedBehavior[Command, Event, State]
+
   /**
    * The `callback` function is called to notify that recovery has failed. For setting a supervision
    * strategy `onPersistFailure`
@@ -120,6 +125,7 @@ object EventSourcedBehavior {
    * `predicate` receives the State, Event and the sequenceNr used for the Event
    */
   def snapshotWhen(predicate: (State, Event, Long) => Boolean): EventSourcedBehavior[Command, Event, State]
+
   /**
    * Snapshot every N events
    *
@@ -168,4 +174,3 @@ object EventSourcedBehavior {
    */
   def onPersistFailure(backoffStrategy: BackoffSupervisorStrategy): EventSourcedBehavior[Command, Event, State]
 }
-

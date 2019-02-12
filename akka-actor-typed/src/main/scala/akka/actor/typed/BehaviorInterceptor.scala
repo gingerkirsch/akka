@@ -4,7 +4,7 @@
 
 package akka.actor.typed
 
-import akka.annotation.{ DoNotInherit, InternalApi }
+import akka.annotation.{DoNotInherit, InternalApi}
 
 /**
  * A behavior interceptor allows for intercepting message and signal reception and perform arbitrary logic -

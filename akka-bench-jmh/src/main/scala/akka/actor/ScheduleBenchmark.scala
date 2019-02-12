@@ -12,7 +12,7 @@ import org.openjdk.jmh.annotations._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Promise }
+import scala.concurrent.{Await, Promise}
 
 /*
 [info] Benchmark                                    (ratio) (to)   Mode   Samples        Score  Score error    Units
@@ -86,12 +86,14 @@ class ScheduleBenchmark {
 
   @Benchmark
   def multipleScheduleOnce(): Unit = {
-    val tryWithNext = (1 to to).foldLeft(0.millis -> List[Cancellable]()) {
-      case ((interv, c), idx) =>
-        (interv + interval, scheduler.scheduleOnce(interv) {
-          op(idx)
-        } :: c)
-    }._2
+    val tryWithNext = (1 to to)
+      .foldLeft(0.millis -> List[Cancellable]()) {
+        case ((interv, c), idx) =>
+          (interv + interval, scheduler.scheduleOnce(interv) {
+            op(idx)
+          } :: c)
+      }
+      ._2
     promise.future.onComplete {
       case _ =>
         tryWithNext.foreach(_.cancel())

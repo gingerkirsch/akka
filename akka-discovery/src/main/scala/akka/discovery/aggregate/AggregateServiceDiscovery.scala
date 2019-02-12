@@ -8,7 +8,7 @@ import akka.actor.ExtendedActorSystem
 import akka.annotation.InternalApi
 import akka.discovery.ServiceDiscovery.Resolved
 import akka.discovery.aggregate.AggregateServiceDiscovery.Methods
-import akka.discovery.{ Discovery, Lookup, ServiceDiscovery }
+import akka.discovery.{Discovery, Lookup, ServiceDiscovery}
 import akka.event.Logging
 import akka.util.Helpers.Requiring
 import com.typesafe.config.Config

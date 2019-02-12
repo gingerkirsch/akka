@@ -5,7 +5,7 @@
 package akka.io.dns.internal
 
 import akka.annotation.InternalApi
-import akka.util.{ ByteIterator, ByteString, ByteStringBuilder }
+import akka.util.{ByteIterator, ByteString, ByteStringBuilder}
 
 /**
  * INTERNAL API

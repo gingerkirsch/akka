@@ -5,7 +5,7 @@
 package akka.actor.typed.internal
 
 import java.util.function.Consumer
-import java.util.function.{ Function => JFunction }
+import java.util.function.{Function => JFunction}
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.javadsl
@@ -28,11 +28,11 @@ import akka.util.ConstantFun
 /**
  * INTERNAL API
  */
-@InternalApi private[akka] final class StashBufferImpl[T] private (
-  val capacity:       Int,
-  private var _first: StashBufferImpl.Node[T],
-  private var _last:  StashBufferImpl.Node[T])
-  extends javadsl.StashBuffer[T] with scaladsl.StashBuffer[T] {
+@InternalApi private[akka] final class StashBufferImpl[T] private (val capacity: Int,
+                                                                   private var _first: StashBufferImpl.Node[T],
+                                                                   private var _last: StashBufferImpl.Node[T])
+    extends javadsl.StashBuffer[T]
+    with scaladsl.StashBuffer[T] {
 
   import StashBufferImpl.Node
 
@@ -49,8 +49,10 @@ import akka.util.ConstantFun
   override def stash(message: T): StashBufferImpl[T] = {
     if (message == null) throw new NullPointerException
     if (isFull)
-      throw new javadsl.StashOverflowException(s"Couldn't add [${message.getClass.getName}] " +
-        s"because stash with capacity [$capacity] is full")
+      throw new javadsl.StashOverflowException(
+        s"Couldn't add [${message.getClass.getName}] " +
+        s"because stash with capacity [$capacity] is full"
+      )
 
     val node = new Node(null, message)
     if (isEmpty) {
@@ -94,8 +96,10 @@ import akka.util.ConstantFun
   override def unstashAll(ctx: javadsl.ActorContext[T], behavior: Behavior[T]): Behavior[T] =
     unstashAll(ctx.asScala, behavior)
 
-  override def unstash(ctx: scaladsl.ActorContext[T], behavior: Behavior[T],
-                       numberOfMessages: Int, wrap: T => T): Behavior[T] = {
+  override def unstash(ctx: scaladsl.ActorContext[T],
+                       behavior: Behavior[T],
+                       numberOfMessages: Int,
+                       wrap: T => T): Behavior[T] = {
     val iter = new Iterator[T] {
       override def hasNext: Boolean = StashBufferImpl.this.nonEmpty
       override def next(): T = wrap(StashBufferImpl.this.dropHead())
@@ -103,11 +107,12 @@ import akka.util.ConstantFun
     Behavior.interpretMessages[T](behavior, ctx, iter)
   }
 
-  override def unstash(ctx: javadsl.ActorContext[T], behavior: Behavior[T],
-                       numberOfMessages: Int, wrap: JFunction[T, T]): Behavior[T] =
+  override def unstash(ctx: javadsl.ActorContext[T],
+                       behavior: Behavior[T],
+                       numberOfMessages: Int,
+                       wrap: JFunction[T, T]): Behavior[T] =
     unstash(ctx.asScala, behavior, numberOfMessages, x => wrap.apply(x))
 
   override def toString: String =
     s"StashBuffer($size/$capacity)"
 }
-

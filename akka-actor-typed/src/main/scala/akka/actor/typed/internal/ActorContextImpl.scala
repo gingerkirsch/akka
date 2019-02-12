@@ -6,14 +6,14 @@ package akka.actor.typed
 package internal
 
 import java.time.Duration
-import java.util.function.{ Function => JFunction }
+import java.util.function.{Function => JFunction}
 import java.util.ArrayList
 import java.util.Optional
 import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 
-import scala.concurrent.{ ExecutionContextExecutor, Future }
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 import akka.annotation.InternalApi
@@ -24,7 +24,10 @@ import akka.util.JavaDurationConverters._
 /**
  * INTERNAL API
  */
-@InternalApi private[akka] trait ActorContextImpl[T] extends TypedActorContext[T] with javadsl.ActorContext[T] with scaladsl.ActorContext[T] {
+@InternalApi private[akka] trait ActorContextImpl[T]
+    extends TypedActorContext[T]
+    with javadsl.ActorContext[T]
+    with scaladsl.ActorContext[T] {
 
   private var messageAdapterRef: OptionVal[ActorRef[Any]] = OptionVal.None
   private var _messageAdapters: List[(Class[_], Any => T)] = Nil
@@ -81,13 +84,19 @@ import akka.util.JavaDurationConverters._
     spawnAnonymous(behavior, Props.empty)
 
   // Scala API impl
-  override def ask[Req, Res](target: RecipientRef[Req])(createRequest: ActorRef[Res] => Req)(mapResponse: Try[Res] => T)(implicit responseTimeout: Timeout, classTag: ClassTag[Res]): Unit = {
+  override def ask[Req, Res](target: RecipientRef[Req])(
+      createRequest: ActorRef[Res] => Req
+  )(mapResponse: Try[Res] => T)(implicit responseTimeout: Timeout, classTag: ClassTag[Res]): Unit = {
     import akka.actor.typed.scaladsl.AskPattern._
     pipeToSelf((target ? createRequest)(responseTimeout, system.scheduler))(mapResponse)
   }
 
   // Java API impl
-  def ask[Req, Res](resClass: Class[Res], target: RecipientRef[Req], responseTimeout: Duration, createRequest: JFunction[ActorRef[Res], Req], applyToResponse: BiFunction[Res, Throwable, T]): Unit = {
+  def ask[Req, Res](resClass: Class[Res],
+                    target: RecipientRef[Req],
+                    responseTimeout: Duration,
+                    createRequest: JFunction[ActorRef[Res], Req],
+                    applyToResponse: BiFunction[Res, Throwable, T]): Unit = {
     import akka.actor.typed.javadsl.AskPattern
     val message = new akka.japi.function.Function[ActorRef[Res], Req] {
       def apply(ref: ActorRef[Res]): Req = createRequest(ref)
@@ -105,7 +114,8 @@ import akka.util.JavaDurationConverters._
     future.whenComplete(new BiConsumer[Value, Throwable] {
       def accept(value: Value, ex: Throwable): Unit = {
         if (value != null) self.unsafeUpcast ! AdaptMessage(value, applyToResult.apply(_: Value, null))
-        if (ex != null) self.unsafeUpcast ! AdaptMessage(ex, applyToResult.apply(null.asInstanceOf[Value], _: Throwable))
+        if (ex != null)
+          self.unsafeUpcast ! AdaptMessage(ex, applyToResult.apply(null.asInstanceOf[Value], _: Throwable))
       }
     })
   }
@@ -134,12 +144,13 @@ import akka.util.JavaDurationConverters._
     // replace existing adapter for same class, only one per class is supported to avoid unbounded growth
     // in case "same" adapter is added repeatedly
     _messageAdapters = (messageClass, f.asInstanceOf[Any => T]) ::
-      _messageAdapters.filterNot { case (cls, _) => cls == messageClass }
+    _messageAdapters.filterNot { case (cls, _) => cls == messageClass }
     val ref = messageAdapterRef match {
       case OptionVal.Some(ref) => ref.asInstanceOf[ActorRef[U]]
-      case OptionVal.None =>
+      case OptionVal.None      =>
         // AdaptMessage is not really a T, but that is erased
-        val ref = internalSpawnMessageAdapter[Any](msg => AdaptWithRegisteredMessageAdapter(msg).asInstanceOf[T], "adapter")
+        val ref =
+          internalSpawnMessageAdapter[Any](msg => AdaptWithRegisteredMessageAdapter(msg).asInstanceOf[T], "adapter")
         messageAdapterRef = OptionVal.Some(ref)
         ref
     }
@@ -151,4 +162,3 @@ import akka.util.JavaDurationConverters._
    */
   @InternalApi private[akka] def messageAdapters: List[(Class[_], Any => T)] = _messageAdapters
 }
-

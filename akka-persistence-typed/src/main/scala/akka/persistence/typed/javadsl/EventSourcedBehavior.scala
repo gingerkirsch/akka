@@ -22,7 +22,10 @@ import akka.persistence.typed._
 import akka.persistence.typed.internal._
 
 @ApiMayChange
-abstract class EventSourcedBehavior[Command, Event, State >: Null] private[akka] (val persistenceId: PersistenceId, onPersistFailure: Optional[BackoffSupervisorStrategy]) extends DeferredBehavior[Command] {
+abstract class EventSourcedBehavior[Command, Event, State >: Null] private[akka] (
+    val persistenceId: PersistenceId,
+    onPersistFailure: Optional[BackoffSupervisorStrategy]
+) extends DeferredBehavior[Command] {
 
   def this(persistenceId: PersistenceId) = {
     this(persistenceId, Optional.empty[BackoffSupervisorStrategy])
@@ -151,8 +154,8 @@ abstract class EventSourcedBehavior[Command, Event, State >: Null] private[akka]
       emptyState,
       (state, cmd) => commandHandler()(state, cmd).asInstanceOf[EffectImpl[Event, State]],
       eventHandler()(_, _),
-      getClass)
-      .onRecoveryCompleted(onRecoveryCompleted)
+      getClass
+    ).onRecoveryCompleted(onRecoveryCompleted)
       .snapshotWhen(snapshotWhen)
       .withTagger(tagger)
       .onSnapshot((meta, result) => {
@@ -187,8 +190,10 @@ abstract class EventSourcedBehavior[Command, Event, State >: Null] private[akka]
  * created with `Effects().reply`, `Effects().noReply`, [[Effect.thenReply]], or [[Effect.thenNoReply]].
  */
 @ApiMayChange
-abstract class EventSourcedBehaviorWithEnforcedReplies[Command, Event, State >: Null](persistenceId: PersistenceId, backoffSupervisorStrategy: Optional[BackoffSupervisorStrategy])
-  extends EventSourcedBehavior[Command, Event, State](persistenceId, backoffSupervisorStrategy) {
+abstract class EventSourcedBehaviorWithEnforcedReplies[Command, Event, State >: Null](
+    persistenceId: PersistenceId,
+    backoffSupervisorStrategy: Optional[BackoffSupervisorStrategy]
+) extends EventSourcedBehavior[Command, Event, State](persistenceId, backoffSupervisorStrategy) {
 
   def this(persistenceId: PersistenceId) = {
     this(persistenceId, Optional.empty[BackoffSupervisorStrategy])

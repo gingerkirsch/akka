@@ -4,21 +4,20 @@
 
 package akka.stream.impl
 
-import akka.actor.{ Actor, ActorRef, Deploy, Props }
-import akka.annotation.{ DoNotInherit, InternalApi }
-import akka.stream.{ ActorMaterializerSettings, Attributes }
+import akka.actor.{Actor, ActorRef, Deploy, Props}
+import akka.annotation.{DoNotInherit, InternalApi}
+import akka.stream.{ActorMaterializerSettings, Attributes}
 import org.reactivestreams.Subscriber
 
 /**
  * INTERNAL API
  */
-@DoNotInherit private[akka] abstract class FanoutOutputs(
-  val maxBufferSize:     Int,
-  val initialBufferSize: Int,
-  self:                  ActorRef,
-  val pump:              Pump)
-  extends DefaultOutputTransferStates
-  with SubscriberManagement[Any] {
+@DoNotInherit private[akka] abstract class FanoutOutputs(val maxBufferSize: Int,
+                                                         val initialBufferSize: Int,
+                                                         self: ActorRef,
+                                                         val pump: Pump)
+    extends DefaultOutputTransferStates
+    with SubscriberManagement[Any] {
 
   override type S = ActorSubscriptionWithCursor[_ >: Any]
   override def createSubscription(subscriber: Subscriber[_ >: Any]): S =
@@ -62,7 +61,7 @@ import org.reactivestreams.Subscriber
   override protected def requestFromUpstream(elements: Long): Unit = downstreamBufferSpace += elements
 
   private def subscribePending(): Unit =
-    exposedPublisher.takePendingSubscribers() foreach registerSubscriber
+    exposedPublisher.takePendingSubscribers().foreach(registerSubscriber)
 
   override protected def shutdown(completed: Boolean): Unit = {
     if (exposedPublisher ne null) {
@@ -104,11 +103,12 @@ import org.reactivestreams.Subscriber
   def props(attributes: Attributes, actorMaterializerSettings: ActorMaterializerSettings): Props =
     Props(new FanoutProcessorImpl(attributes, actorMaterializerSettings)).withDeploy(Deploy.local)
 }
+
 /**
  * INTERNAL API
  */
 @InternalApi private[akka] class FanoutProcessorImpl(attributes: Attributes, _settings: ActorMaterializerSettings)
-  extends ActorProcessorImpl(attributes, _settings) {
+    extends ActorProcessorImpl(attributes, _settings) {
 
   override val primaryOutputs: FanoutOutputs = {
     val inputBuffer = attributes.mandatoryAttribute[Attributes.InputBuffer]

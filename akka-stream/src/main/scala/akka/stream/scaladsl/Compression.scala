@@ -37,7 +37,8 @@ object Compression {
    * @param maxBytesPerChunk Maximum length of an output [[ByteString]] chunk.
    */
   def gunzip(maxBytesPerChunk: Int = MaxBytesPerChunkDefault): Flow[ByteString, ByteString, NotUsed] =
-    Flow[ByteString].via(new GzipDecompressor(maxBytesPerChunk))
+    Flow[ByteString]
+      .via(new GzipDecompressor(maxBytesPerChunk))
       .named("gunzip")
 
   /**
@@ -75,6 +76,7 @@ object Compression {
    * @param nowrap if true then use GZIP compatible decompression
    */
   def inflate(maxBytesPerChunk: Int, nowrap: Boolean): Flow[ByteString, ByteString, NotUsed] =
-    Flow[ByteString].via(new DeflateDecompressor(maxBytesPerChunk, nowrap))
+    Flow[ByteString]
+      .via(new DeflateDecompressor(maxBytesPerChunk, nowrap))
       .named("inflate")
 }

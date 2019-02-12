@@ -8,7 +8,7 @@ import java.util
 import java.util.concurrent.TimeUnit
 
 import akka.remote.artery.LruBoundedCache
-import org.openjdk.jmh.annotations.{ Param, _ }
+import org.openjdk.jmh.annotations.{Param, _}
 
 import scala.util.Random
 

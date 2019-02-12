@@ -5,8 +5,8 @@
 package akka.actor.testkit.typed.scaladsl
 
 import akka.actor.testkit.typed.internal.BehaviorTestKitImpl
-import akka.actor.testkit.typed.{ CapturedLogEvent, Effect }
-import akka.actor.typed.{ ActorRef, Behavior, Signal, TypedActorContext }
+import akka.actor.testkit.typed.{CapturedLogEvent, Effect}
+import akka.actor.typed.{ActorRef, Behavior, Signal, TypedActorContext}
 import akka.annotation.DoNotInherit
 
 import java.util.concurrent.ThreadLocalRandom
@@ -19,7 +19,7 @@ object BehaviorTestKit {
 
   def apply[T](initialBehavior: Behavior[T], name: String): BehaviorTestKit[T] = {
     val uid = ThreadLocalRandom.current().nextInt()
-    new BehaviorTestKitImpl(address / name withUid (uid), initialBehavior)
+    new BehaviorTestKitImpl((address / name).withUid(uid), initialBehavior)
   }
   def apply[T](initialBehavior: Behavior[T]): BehaviorTestKit[T] =
     apply(initialBehavior, "testkit")

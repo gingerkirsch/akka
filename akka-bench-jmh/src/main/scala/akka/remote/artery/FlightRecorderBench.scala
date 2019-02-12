@@ -7,10 +7,10 @@ package akka.remote.artery
 import java.io.File
 import java.nio.channels.FileChannel
 import java.nio.file.StandardOpenOption
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.concurrent.TimeUnit
 
-import org.openjdk.jmh.annotations.{ OperationsPerInvocation, _ }
+import org.openjdk.jmh.annotations.{OperationsPerInvocation, _}
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -30,7 +30,8 @@ class FlightRecorderBench {
   def setup(): Unit = {
     file = File.createTempFile("akka-flightrecorder", "dat")
     file.deleteOnExit()
-    fileChannel = FileChannel.open(file.toPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.READ)
+    fileChannel =
+      FileChannel.open(file.toPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.READ)
     recorder = new FlightRecorder(fileChannel)
   }
 

@@ -6,7 +6,7 @@ package akka.remote.serialization
 
 import akka.actor.ExtendedActorSystem
 import akka.remote.ContainerFormats
-import akka.serialization.{ SerializationExtension, Serializers }
+import akka.serialization.{SerializationExtension, Serializers}
 import akka.protobuf.ByteString
 
 /**
@@ -33,10 +33,7 @@ private[akka] class WrappedPayloadSupport(system: ExtendedActorSystem) {
 
   def deserializePayload(payload: ContainerFormats.Payload): Any = {
     val manifest = if (payload.hasMessageManifest) payload.getMessageManifest.toStringUtf8 else ""
-    serialization.deserialize(
-      payload.getEnclosedMessage.toByteArray,
-      payload.getSerializerId,
-      manifest).get
+    serialization.deserialize(payload.getEnclosedMessage.toByteArray, payload.getSerializerId, manifest).get
   }
 
 }

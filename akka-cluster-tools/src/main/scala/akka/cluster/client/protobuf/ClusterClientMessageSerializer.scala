@@ -10,14 +10,15 @@ import akka.serialization.BaseSerializer
 import akka.serialization.SerializationExtension
 import akka.serialization.SerializerWithStringManifest
 import akka.cluster.client.ClusterReceptionist
-import akka.cluster.client.protobuf.msg.{ ClusterClientMessages => cm }
+import akka.cluster.client.protobuf.msg.{ClusterClientMessages => cm}
 import java.io.NotSerializableException
 
 /**
  * INTERNAL API: Serializer of ClusterClient messages.
  */
 private[akka] class ClusterClientMessageSerializer(val system: ExtendedActorSystem)
-  extends SerializerWithStringManifest with BaseSerializer {
+    extends SerializerWithStringManifest
+    with BaseSerializer {
   import ClusterReceptionist.Internal._
 
   private lazy val serialization = SerializationExtension(system)
@@ -32,10 +33,19 @@ private[akka] class ClusterClientMessageSerializer(val system: ExtendedActorSyst
 
   private val fromBinaryMap = collection.immutable.HashMap[String, Array[Byte] => AnyRef](
     ContactsManifest -> contactsFromBinary,
-    GetContactsManifest -> { _ => GetContacts },
-    HeartbeatManifest -> { _ => Heartbeat },
-    HeartbeatRspManifest -> { _ => HeartbeatRsp },
-    ReceptionistShutdownManifest -> { _ => ReceptionistShutdown })
+    GetContactsManifest -> { _ =>
+      GetContacts
+    },
+    HeartbeatManifest -> { _ =>
+      Heartbeat
+    },
+    HeartbeatRspManifest -> { _ =>
+      HeartbeatRsp
+    },
+    ReceptionistShutdownManifest -> { _ =>
+      ReceptionistShutdown
+    }
+  )
 
   override def manifest(obj: AnyRef): String = obj match {
     case _: Contacts          => ContactsManifest
@@ -60,8 +70,10 @@ private[akka] class ClusterClientMessageSerializer(val system: ExtendedActorSyst
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef =
     fromBinaryMap.get(manifest) match {
       case Some(f) => f(bytes)
-      case None => throw new NotSerializableException(
-        s"Unimplemented deserialization of message with manifest [$manifest] in [${getClass.getName}]")
+      case None =>
+        throw new NotSerializableException(
+          s"Unimplemented deserialization of message with manifest [$manifest] in [${getClass.getName}]"
+        )
     }
 
   private def contactsToProto(m: Contacts): cm.Contacts =

@@ -4,17 +4,17 @@
 
 package akka.stream
 
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.remote.artery.{ BenchTestSource, LatchSink }
+import akka.remote.artery.{BenchTestSource, LatchSink}
 import akka.stream.scaladsl._
 import akka.stream.testkit.scaladsl.StreamTestKit
 import com.typesafe.config.ConfigFactory
 import org.openjdk.jmh.annotations._
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 object MapAsyncBenchmark {

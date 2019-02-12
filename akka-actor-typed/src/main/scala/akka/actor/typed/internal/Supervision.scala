@@ -45,14 +45,16 @@ import akka.util.unused
  * INTERNAL API
  */
 @InternalApi
-private abstract class AbstractSupervisor[O, I, Thr <: Throwable](strategy: SupervisorStrategy)(implicit ev: ClassTag[Thr]) extends BehaviorInterceptor[O, I] {
+private abstract class AbstractSupervisor[O, I, Thr <: Throwable](strategy: SupervisorStrategy)(
+    implicit ev: ClassTag[Thr]
+) extends BehaviorInterceptor[O, I] {
 
   private val throwableClass = implicitly[ClassTag[Thr]].runtimeClass
 
   override def isSame(other: BehaviorInterceptor[Any, Any]): Boolean = {
     other match {
       case as: AbstractSupervisor[_, _, Thr] if throwableClass == as.throwableClass => true
-      case _ => false
+      case _                                                                        => false
     }
   }
 
@@ -89,7 +91,8 @@ private abstract class AbstractSupervisor[O, I, Thr <: Throwable](strategy: Supe
 /**
  * For cases where O == I for BehaviorInterceptor.
  */
-private abstract class SimpleSupervisor[T, Thr <: Throwable: ClassTag](ss: SupervisorStrategy) extends AbstractSupervisor[T, T, Thr](ss) {
+private abstract class SimpleSupervisor[T, Thr <: Throwable: ClassTag](ss: SupervisorStrategy)
+    extends AbstractSupervisor[T, T, Thr](ss) {
 
   override def aroundReceive(ctx: TypedActorContext[T], msg: T, target: ReceiveTarget[T]): Behavior[T] = {
     try {
@@ -112,7 +115,7 @@ private abstract class SimpleSupervisor[T, Thr <: Throwable: ClassTag](ss: Super
 }
 
 private class StopSupervisor[T, Thr <: Throwable: ClassTag](@unused initial: Behavior[T], strategy: Stop)
-  extends SimpleSupervisor[T, Thr](strategy) {
+    extends SimpleSupervisor[T, Thr](strategy) {
   override def handleException(ctx: TypedActorContext[T]): Catcher[Behavior[T]] = {
     case NonFatal(t: Thr) =>
       log(ctx, t)
@@ -129,14 +132,14 @@ private class ResumeSupervisor[T, Thr <: Throwable: ClassTag](ss: Resume) extend
 }
 
 private object RestartSupervisor {
+
   /**
    * Calculates an exponential back off delay.
    */
-  def calculateDelay(
-    restartCount: Int,
-    minBackoff:   FiniteDuration,
-    maxBackoff:   FiniteDuration,
-    randomFactor: Double): FiniteDuration = {
+  def calculateDelay(restartCount: Int,
+                     minBackoff: FiniteDuration,
+                     maxBackoff: FiniteDuration,
+                     randomFactor: Double): FiniteDuration = {
     val rnd = 1.0 + ThreadLocalRandom.current().nextDouble() * randomFactor
     if (restartCount >= 30) // Duration overflow protection (> 100 years)
       maxBackoff
@@ -148,11 +151,12 @@ private object RestartSupervisor {
   }
 
   final case class ScheduledRestart(owner: RestartSupervisor[_, _, _ <: Throwable]) extends DeadLetterSuppression
-  final case class ResetRestartCount(current: Int, owner: RestartSupervisor[_, _, _ <: Throwable]) extends DeadLetterSuppression
+  final case class ResetRestartCount(current: Int, owner: RestartSupervisor[_, _, _ <: Throwable])
+      extends DeadLetterSuppression
 }
 
 private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behavior[T], strategy: RestartOrBackoff)
-  extends AbstractSupervisor[O, T, Thr](strategy) {
+    extends AbstractSupervisor[O, T, Thr](strategy) {
   import RestartSupervisor._
 
   private var restartingInProgress: OptionVal[(StashBuffer[Any], Set[ActorRef[Nothing]])] = OptionVal.None
@@ -238,7 +242,8 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
     }
   }
 
-  override protected def handleExceptionOnStart(ctx: TypedActorContext[O], @unused target: PreStartTarget[T]): Catcher[Behavior[T]] = {
+  override protected def handleExceptionOnStart(ctx: TypedActorContext[O],
+                                                @unused target: PreStartTarget[T]): Catcher[Behavior[T]] = {
     case NonFatal(t: Thr) =>
       strategy match {
         case _: Restart =>
@@ -254,10 +259,12 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
       }
   }
 
-  override protected def handleSignalException(ctx: TypedActorContext[O], target: SignalTarget[T]): Catcher[Behavior[T]] = {
+  override protected def handleSignalException(ctx: TypedActorContext[O],
+                                               target: SignalTarget[T]): Catcher[Behavior[T]] = {
     handleException(ctx, () => target(ctx, PreRestart))
   }
-  override protected def handleReceiveException(ctx: TypedActorContext[O], target: ReceiveTarget[T]): Catcher[Behavior[T]] = {
+  override protected def handleReceiveException(ctx: TypedActorContext[O],
+                                                target: ReceiveTarget[T]): Catcher[Behavior[T]] = {
     handleException(ctx, () => target.signalRestart(ctx))
   }
 
@@ -272,7 +279,8 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
         }
 
       } else {
-        try signalRestart() catch {
+        try signalRestart()
+        catch {
           case NonFatal(ex) => ctx.asScala.log.error(ex, "failure during PreRestart")
         }
 
@@ -296,7 +304,8 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
 
     strategy match {
       case backoff: Backoff =>
-        val restartDelay = calculateDelay(currentRestartCount, backoff.minBackoff, backoff.maxBackoff, backoff.randomFactor)
+        val restartDelay =
+          calculateDelay(currentRestartCount, backoff.minBackoff, backoff.maxBackoff, backoff.randomFactor)
         gotScheduledRestart = false
         ctx.asScala.scheduleOnce(restartDelay, ctx.asScala.self.unsafeUpcast[Any], ScheduledRestart(this))
         Behaviors.empty
@@ -312,8 +321,9 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
     strategy match {
       case backoff: Backoff =>
         gotScheduledRestart = false
-        ctx.asScala.scheduleOnce(backoff.resetBackoffAfter, ctx.asScala.self.unsafeUpcast[Any],
-          ResetRestartCount(restartCount, this))
+        ctx.asScala.scheduleOnce(backoff.resetBackoffAfter,
+                                 ctx.asScala.self.unsafeUpcast[Any],
+                                 ResetRestartCount(restartCount, this))
       case _: Restart =>
     }
 
@@ -342,7 +352,8 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
     strategy match {
       case restart: Restart =>
         val timeLeft = deadlineHasTimeLeft
-        val newDeadline = if (deadline.isDefined && timeLeft) deadline else OptionVal.Some(Deadline.now + restart.withinTimeRange)
+        val newDeadline =
+          if (deadline.isDefined && timeLeft) deadline else OptionVal.Some(Deadline.now + restart.withinTimeRange)
         restartCount = if (timeLeft) restartCount + 1 else 1
         deadline = newDeadline
       case _: Backoff =>
@@ -351,4 +362,3 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
   }
 
 }
-

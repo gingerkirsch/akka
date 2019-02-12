@@ -10,10 +10,10 @@ import java.util.concurrent.TimeUnit
 import akka.Done
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{ Keep, Sink, StreamConverters }
+import akka.stream.scaladsl.{Keep, Sink, StreamConverters}
 import org.openjdk.jmh.annotations.TearDown
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import org.openjdk.jmh.annotations._
 
@@ -36,7 +36,8 @@ class OutputStreamSourceStageBenchmark {
   @Benchmark
   @OperationsPerInvocation(WritesPerBench)
   def consumeWrites(): Unit = {
-    val (os, done) = StreamConverters.asOutputStream()
+    val (os, done) = StreamConverters
+      .asOutputStream()
       .toMat(Sink.ignore)(Keep.both)
       .run()
     new Thread(new Runnable {

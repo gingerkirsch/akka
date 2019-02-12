@@ -8,7 +8,7 @@ import akka.Done
 import akka.annotation.InternalApi
 
 import scala.concurrent.Promise
-import org.reactivestreams.{ Subscriber, Subscription }
+import org.reactivestreams.{Subscriber, Subscription}
 
 /**
  * INTERNAL API

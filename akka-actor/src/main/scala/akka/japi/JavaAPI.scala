@@ -4,7 +4,7 @@
 
 package akka.japi
 
-import java.util.Collections.{ emptyList, singletonList }
+import java.util.Collections.{emptyList, singletonList}
 
 import akka.util.Collections.EmptyImmutableSeq
 
@@ -84,6 +84,7 @@ object Pair {
  */
 @SerialVersionUID(1L)
 trait Creator[T] extends Serializable {
+
   /**
    * This method must return a different instance upon every call.
    */
@@ -140,8 +141,12 @@ abstract class JavaPartialFunction[A, B] extends AbstractPartialFunction[A, B] {
   def apply(x: A, isCheck: Boolean): B
 
   final def isDefinedAt(x: A): Boolean = try { apply(x, true); true } catch { case NoMatch => false }
-  final override def apply(x: A): B = try apply(x, false) catch { case NoMatch => throw new MatchError(x) }
-  final override def applyOrElse[A1 <: A, B1 >: B](x: A1, default: A1 => B1): B1 = try apply(x, false) catch { case NoMatch => default(x) }
+  final override def apply(x: A): B =
+    try apply(x, false)
+    catch { case NoMatch => throw new MatchError(x) }
+  final override def applyOrElse[A1 <: A, B1 >: B](x: A1, default: A1 => B1): B1 =
+    try apply(x, false)
+    catch { case NoMatch => default(x) }
 }
 
 /**
@@ -151,6 +156,7 @@ abstract class JavaPartialFunction[A, B] extends AbstractPartialFunction[A, B] {
  */
 sealed abstract class Option[A] extends java.lang.Iterable[A] {
   def get: A
+
   /**
    * Returns <code>a</code> if this is <code>some(a)</code> or <code>defaultValue</code> if
    * this is <code>none</code>.
@@ -163,6 +169,7 @@ sealed abstract class Option[A] extends java.lang.Iterable[A] {
 }
 
 object Option {
+
   /**
    * <code>Option</code> factory that creates <code>Some</code>
    */

@@ -4,9 +4,10 @@
 
 package akka.persistence
 
-import java.io.{ ByteArrayOutputStream, InputStream }
+import java.io.{ByteArrayOutputStream, InputStream}
 
 package object serialization {
+
   /**
    * Converts an input stream to a byte array.
    */

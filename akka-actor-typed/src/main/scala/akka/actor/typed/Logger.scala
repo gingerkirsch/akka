@@ -6,7 +6,7 @@ package akka.actor.typed
 
 import java.util.Optional
 
-import akka.annotation.{ DoNotInherit, InternalApi }
+import akka.annotation.{DoNotInherit, InternalApi}
 import akka.event.Logging
 import akka.event.Logging._
 
@@ -49,6 +49,7 @@ object LogMarker {
  */
 @DoNotInherit
 abstract sealed class LogOptions {
+
   /**
    * User control whether messages are logged or not.  This is useful when you want to have an application configuration
    * to control when to log messages.
@@ -68,6 +69,7 @@ abstract sealed class LogOptions {
   def enabled: Boolean
   def level: LogLevel
   def logger: Option[Logger]
+
   /** Java API */
   def getLogger: Optional[Logger]
 }
@@ -76,12 +78,14 @@ abstract sealed class LogOptions {
  * Factories for log options
  */
 object LogOptions {
+
   /**
    * INTERNAL API
    */
   @InternalApi
   private[akka] final case class LogOptionsImpl(enabled: Boolean, level: LogLevel, logger: Option[Logger])
-    extends LogOptions {
+      extends LogOptions {
+
     /**
      * User control whether messages are logged or not.  This is useful when you want to have an application configuration
      * to control when to log messages.
@@ -189,6 +193,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -198,18 +203,21 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
    * @see [[Logger]]
    */
   def error(template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
    * @see [[Logger]]
    */
   def error(template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -225,6 +233,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(cause: Throwable, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -234,18 +243,21 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(cause: Throwable, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
    * @see [[Logger]]
    */
   def error(cause: Throwable, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
    * @see [[Logger]]
    */
   def error(cause: Throwable, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -261,6 +273,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(marker: LogMarker, cause: Throwable, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -270,24 +283,28 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(marker: LogMarker, cause: Throwable, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
    * @see [[Logger]]
    */
   def error(marker: LogMarker, cause: Throwable, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
    * @see [[Logger]]
    */
   def error(marker: LogMarker, cause: Throwable, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
    * @see [[Logger]]
    */
   def error(marker: LogMarker, cause: Throwable, template: String, arg1: Any, arg2: Any, arg3: Any, arg4: Any): Unit
+
   /**
    * Log message at error level, without providing the exception that caused the error.
    *
@@ -296,6 +313,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(marker: LogMarker, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -307,6 +325,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(marker: LogMarker, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
@@ -315,6 +334,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(marker: LogMarker, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
@@ -323,6 +343,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def error(marker: LogMarker, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -338,6 +359,7 @@ abstract class Logger private[akka] () {
    * Log message at warning level.
    */
   def warning(message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -347,18 +369,21 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
    * @see [[Logger]]
    */
   def warning(template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
    * @see [[Logger]]
    */
   def warning(template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -370,6 +395,7 @@ abstract class Logger private[akka] () {
    * Log message at warning level.
    */
   def warning(cause: Throwable, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -379,16 +405,19 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(cause: Throwable, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    * @see [[Logger]]
    */
   def warning(cause: Throwable, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    * @see [[Logger]]
    */
   def warning(cause: Throwable, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    * @see [[Logger]]
@@ -402,6 +431,7 @@ abstract class Logger private[akka] () {
    * The marker argument can be picked up by various logging frameworks such as slf4j to mark this log statement as "special".
    */
   def warning(marker: LogMarker, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -413,6 +443,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(marker: LogMarker, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
@@ -421,6 +452,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(marker: LogMarker, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
@@ -429,6 +461,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(marker: LogMarker, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -443,6 +476,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(marker: LogMarker, cause: Throwable, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -454,6 +488,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(marker: LogMarker, cause: Throwable, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
@@ -462,6 +497,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(marker: LogMarker, cause: Throwable, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
@@ -470,6 +506,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def warning(marker: LogMarker, cause: Throwable, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -487,6 +524,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def info(message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -496,18 +534,21 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def info(template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
    * @see [[Logger]]
    */
   def info(template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
    * @see [[Logger]]
    */
   def info(template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -525,6 +566,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def info(marker: LogMarker, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -536,6 +578,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def info(marker: LogMarker, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
@@ -544,6 +587,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def info(marker: LogMarker, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
@@ -552,6 +596,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def info(marker: LogMarker, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -569,6 +614,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def debug(message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -578,18 +624,21 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def debug(template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
    * @see [[Logger]]
    */
   def debug(template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
    * @see [[Logger]]
    */
   def debug(template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -607,6 +656,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def debug(marker: LogMarker, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -618,6 +668,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def debug(marker: LogMarker, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
@@ -626,6 +677,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def debug(marker: LogMarker, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
@@ -634,6 +686,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def debug(marker: LogMarker, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -651,6 +704,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def log(level: LogLevel, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -660,18 +714,21 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def log(level: LogLevel, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
    * @see [[Logger]]
    */
   def log(level: LogLevel, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
    * @see [[Logger]]
    */
   def log(level: LogLevel, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *
@@ -689,6 +746,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def log(level: LogLevel, marker: LogMarker, message: String): Unit
+
   /**
    * Message template with 1 replacement argument.
    *
@@ -700,6 +758,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def log(level: LogLevel, marker: LogMarker, template: String, arg1: Any): Unit
+
   /**
    * Message template with 2 replacement arguments.
    *
@@ -708,6 +767,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def log(level: LogLevel, marker: LogMarker, template: String, arg1: Any, arg2: Any): Unit
+
   /**
    * Message template with 3 replacement arguments.
    *
@@ -716,6 +776,7 @@ abstract class Logger private[akka] () {
    * @see [[Logger]]
    */
   def log(level: LogLevel, marker: LogMarker, template: String, arg1: Any, arg2: Any, arg3: Any): Unit
+
   /**
    * Message template with 4 replacement arguments. For more parameters see the single replacement version of this method.
    *

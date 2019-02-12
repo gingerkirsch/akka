@@ -50,7 +50,8 @@ class PersistentActorThroughputBenchmark {
     persistPersistentActor = system.actorOf(Props(classOf[PersistPersistentActor], data10k.last), "ep-1")
     persistAsync1PersistentActor = system.actorOf(Props(classOf[PersistAsyncPersistentActor], data10k.last), "epa-1")
 
-    persistAsyncQuickReplyPersistentActor = system.actorOf(Props(classOf[PersistAsyncQuickReplyPersistentActor], data10k.last), "epa-2")
+    persistAsyncQuickReplyPersistentActor =
+      system.actorOf(Props(classOf[PersistAsyncQuickReplyPersistentActor], data10k.last), "epa-2")
   }
 
   @TearDown
@@ -120,7 +121,10 @@ class PersistPersistentActor(respondAfter: Int) extends PersistentActor {
   override def persistenceId: String = self.path.name
 
   override def receiveCommand = {
-    case n: Int => persist(Evt(n)) { e => if (e.i == respondAfter) sender() ! e }
+    case n: Int =>
+      persist(Evt(n)) { e =>
+        if (e.i == respondAfter) sender() ! e
+      }
   }
   override def receiveRecover = {
     case _ => // do nothing
@@ -133,7 +137,9 @@ class PersistAsyncPersistentActor(respondAfter: Int) extends PersistentActor {
 
   override def receiveCommand = {
     case n: Int =>
-      persistAsync(Evt(n)) { e => if (e.i == respondAfter) sender() ! e }
+      persistAsync(Evt(n)) { e =>
+        if (e.i == respondAfter) sender() ! e
+      }
   }
   override def receiveRecover = {
     case _ => // do nothing

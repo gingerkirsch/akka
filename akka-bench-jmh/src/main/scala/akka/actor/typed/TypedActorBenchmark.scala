@@ -87,7 +87,8 @@ class TypedActorBenchmark {
          }
        }
       """
-      ))
+      )
+    )
   }
 
   @TearDown(Level.Trial)
@@ -103,4 +104,3 @@ class TypedActorBenchmark {
   }
 
 }
-

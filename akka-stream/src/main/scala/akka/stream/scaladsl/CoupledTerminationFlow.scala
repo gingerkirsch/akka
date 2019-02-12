@@ -5,7 +5,7 @@
 package akka.stream.scaladsl
 
 import akka.stream._
-import akka.stream.stage.{ GraphStage, GraphStageLogic, InHandler, OutHandler }
+import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
 
 /**
  * Allows coupling termination (cancellation, completion, erroring) of Sinks and Sources while creating a Flow them them.

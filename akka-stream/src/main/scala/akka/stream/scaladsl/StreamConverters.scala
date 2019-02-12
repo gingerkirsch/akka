@@ -4,18 +4,18 @@
 
 package akka.stream.scaladsl
 
-import java.io.{ OutputStream, InputStream }
+import java.io.{InputStream, OutputStream}
 import java.util.Spliterators
-import java.util.stream.{ Collector, StreamSupport }
+import java.util.stream.{Collector, StreamSupport}
 
-import akka.stream.{ Attributes, SinkShape, IOResult }
+import akka.stream.{Attributes, IOResult, SinkShape}
 import akka.stream.impl._
 import akka.stream.impl.Stages.DefaultAttributes
-import akka.stream.impl.io.{ InputStreamSinkStage, OutputStreamSink, OutputStreamSourceStage, InputStreamSource }
+import akka.stream.impl.io.{InputStreamSinkStage, InputStreamSource, OutputStreamSink, OutputStreamSourceStage}
 import akka.util.ByteString
 
 import scala.concurrent.duration.Duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import akka.NotUsed
 
@@ -24,8 +24,8 @@ import akka.NotUsed
  */
 object StreamConverters {
 
-  import Source.{ shape => sourceShape }
-  import Sink.{ shape => sinkShape }
+  import Source.{shape => sourceShape}
+  import Sink.{shape => sinkShape}
 
   /**
    * Creates a Source from an [[InputStream]] created by the given function.
@@ -46,7 +46,9 @@ object StreamConverters {
    * @param chunkSize the size of each read operation, defaults to 8192
    */
   def fromInputStream(in: () => InputStream, chunkSize: Int = 8192): Source[ByteString, Future[IOResult]] =
-    Source.fromGraph(new InputStreamSource(in, chunkSize, DefaultAttributes.inputStreamSource, sourceShape("InputStreamSource")))
+    Source.fromGraph(
+      new InputStreamSource(in, chunkSize, DefaultAttributes.inputStreamSource, sourceShape("InputStreamSource"))
+    )
 
   /**
    * Creates a Source which when materialized will return an [[OutputStream]] which it is possible
@@ -79,7 +81,9 @@ object StreamConverters {
    * will cancel the stream when the [[OutputStream]] is no longer writable.
    */
   def fromOutputStream(out: () => OutputStream, autoFlush: Boolean = false): Sink[ByteString, Future[IOResult]] =
-    Sink.fromGraph(new OutputStreamSink(out, DefaultAttributes.outputStreamSink, sinkShape("OutputStreamSink"), autoFlush))
+    Sink.fromGraph(
+      new OutputStreamSink(out, DefaultAttributes.outputStreamSink, sinkShape("OutputStreamSink"), autoFlush)
+    )
 
   /**
    * Creates a Sink which when materialized will return an [[InputStream]] which it is possible
@@ -109,10 +113,14 @@ object StreamConverters {
    * to handle multiple invocations.
    */
   def javaCollector[T, R](collectorFactory: () => java.util.stream.Collector[T, _ <: Any, R]): Sink[T, Future[R]] =
-    Flow[T].fold(() =>
-      new CollectorState[T, R](collectorFactory().asInstanceOf[Collector[T, Any, R]])) { (state, elem) => () => state().update(elem) }
+    Flow[T]
+      .fold(() => new CollectorState[T, R](collectorFactory().asInstanceOf[Collector[T, Any, R]])) {
+        (state, elem) => () =>
+          state().update(elem)
+      }
       .map(state => state().finish())
-      .toMat(Sink.head)(Keep.right).withAttributes(DefaultAttributes.javaCollector)
+      .toMat(Sink.head)(Keep.right)
+      .withAttributes(DefaultAttributes.javaCollector)
 
   /**
    * Creates a sink which materializes into a ``Future`` which will be completed with result of the Java 8 ``Collector`` transformation
@@ -124,29 +132,37 @@ object StreamConverters {
    * Note that a flow can be materialized multiple times, so the function producing the ``Collector`` must be able
    * to handle multiple invocations.
    */
-  def javaCollectorParallelUnordered[T, R](parallelism: Int)(collectorFactory: () => java.util.stream.Collector[T, _ <: Any, R]): Sink[T, Future[R]] = {
+  def javaCollectorParallelUnordered[T, R](
+      parallelism: Int
+  )(collectorFactory: () => java.util.stream.Collector[T, _ <: Any, R]): Sink[T, Future[R]] = {
     if (parallelism == 1) javaCollector[T, R](collectorFactory)
     else {
-      Sink.fromGraph(GraphDSL.create(Sink.head[R]) { implicit b => sink =>
-        import GraphDSL.Implicits._
-        val collector = collectorFactory().asInstanceOf[Collector[T, Any, R]]
-        val balance = b.add(Balance[T](parallelism))
-        val merge = b.add(Merge[() => CollectorState[T, R]](parallelism))
+      Sink
+        .fromGraph(GraphDSL.create(Sink.head[R]) { implicit b => sink =>
+          import GraphDSL.Implicits._
+          val collector = collectorFactory().asInstanceOf[Collector[T, Any, R]]
+          val balance = b.add(Balance[T](parallelism))
+          val merge = b.add(Merge[() => CollectorState[T, R]](parallelism))
 
-        for (i <- 0 until parallelism) {
-          val worker = Flow[T]
-            .fold(() => new CollectorState(collector)) { (state, elem) => () => state().update(elem) }
-            .async
+          for (i <- 0 until parallelism) {
+            val worker = Flow[T]
+              .fold(() => new CollectorState(collector)) { (state, elem) => () =>
+                state().update(elem)
+              }
+              .async
 
-          balance.out(i) ~> worker ~> merge.in(i)
-        }
+            balance.out(i) ~> worker ~> merge.in(i)
+          }
 
-        merge.out
-          .fold(() => new ReducerState(collector)) { (state, elem) => () => state().update(elem().accumulated) }
-          .map(state => state().finish()) ~> sink.in
+          merge.out
+            .fold(() => new ReducerState(collector)) { (state, elem) => () =>
+              state().update(elem().accumulated)
+            }
+            .map(state => state().finish()) ~> sink.in
 
-        SinkShape(balance.in)
-      }).withAttributes(DefaultAttributes.javaCollectorParallelUnordered)
+          SinkShape(balance.in)
+        })
+        .withAttributes(DefaultAttributes.javaCollectorParallelUnordered)
     }
   }
 
@@ -165,23 +181,34 @@ object StreamConverters {
    */
   def asJavaStream[T](): Sink[T, java.util.stream.Stream[T]] = {
     // TODO removing the QueueSink name, see issue #22523
-    Sink.fromGraph(new QueueSink[T]().withAttributes(Attributes.none))
-      .mapMaterializedValue(queue => StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(new java.util.Iterator[T] {
-          var nextElementFuture: Future[Option[T]] = queue.pull()
-          var nextElement: Option[T] = _
+    Sink
+      .fromGraph(new QueueSink[T]().withAttributes(Attributes.none))
+      .mapMaterializedValue(
+        queue =>
+          StreamSupport
+            .stream(
+              Spliterators.spliteratorUnknownSize(
+                new java.util.Iterator[T] {
+                  var nextElementFuture: Future[Option[T]] = queue.pull()
+                  var nextElement: Option[T] = _
 
-          override def hasNext: Boolean = {
-            nextElement = Await.result(nextElementFuture, Inf)
-            nextElement.isDefined
-          }
+                  override def hasNext: Boolean = {
+                    nextElement = Await.result(nextElementFuture, Inf)
+                    nextElement.isDefined
+                  }
 
-          override def next(): T = {
-            val next = nextElement.get
-            nextElementFuture = queue.pull()
-            next
-          }
-        }, 0), false).onClose(new Runnable { def run = queue.cancel() }))
+                  override def next(): T = {
+                    val next = nextElement.get
+                    nextElementFuture = queue.pull()
+                    next
+                  }
+                },
+                0
+              ),
+              false
+            )
+            .onClose(new Runnable { def run = queue.cancel() })
+      )
       .withAttributes(DefaultAttributes.asJavaStream)
   }
 
@@ -194,6 +221,8 @@ object StreamConverters {
    * You can use [[Source.async]] to create asynchronous boundaries between synchronous Java ``Stream``
    * and the rest of flow.
    */
-  def fromJavaStream[T, S <: java.util.stream.BaseStream[T, S]](stream: () => java.util.stream.BaseStream[T, S]): Source[T, NotUsed] =
+  def fromJavaStream[T, S <: java.util.stream.BaseStream[T, S]](
+      stream: () => java.util.stream.BaseStream[T, S]
+  ): Source[T, NotUsed] =
     Source.fromGraph(new JavaStreamSource[T, S](stream)).withAttributes(DefaultAttributes.fromJavaStream)
 }

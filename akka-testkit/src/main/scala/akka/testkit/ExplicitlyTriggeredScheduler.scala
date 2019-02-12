@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 
 import akka.actor.Cancellable
@@ -30,17 +30,21 @@ import com.typesafe.config.Config
  * easier, but these tests might fail to catch race conditions that only
  * happen when tasks are scheduled in parallel in 'real time'.
  */
-class ExplicitlyTriggeredScheduler(@unused config: Config, log: LoggingAdapter, @unused tf: ThreadFactory) extends Scheduler {
+class ExplicitlyTriggeredScheduler(@unused config: Config, log: LoggingAdapter, @unused tf: ThreadFactory)
+    extends Scheduler {
 
   private case class Item(time: Long, interval: Option[FiniteDuration], runnable: Runnable)
 
   private val currentTime = new AtomicLong()
   private val scheduled = new ConcurrentHashMap[Item, Unit]()
 
-  override def schedule(initialDelay: FiniteDuration, interval: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable =
+  override def schedule(initialDelay: FiniteDuration, interval: FiniteDuration, runnable: Runnable)(
+      implicit executor: ExecutionContext
+  ): Cancellable =
     schedule(initialDelay, Some(interval), runnable)
 
-  override def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit executor: ExecutionContext): Cancellable =
+  override def scheduleOnce(delay: FiniteDuration,
+                            runnable: Runnable)(implicit executor: ExecutionContext): Cancellable =
     schedule(delay, None, runnable)
 
   /**
@@ -58,7 +62,11 @@ class ExplicitlyTriggeredScheduler(@unused config: Config, log: LoggingAdapter, 
 
     val newTime = currentTime.get + amount.toMillis
     if (log.isDebugEnabled)
-      log.debug(s"Time proceeds from ${currentTime.get} to $newTime, currently scheduled for this period:" + scheduledTasks(newTime).map(item => s"\n- $item"))
+      log.debug(
+        s"Time proceeds from ${currentTime.get} to $newTime, currently scheduled for this period:" + scheduledTasks(
+          newTime
+        ).map(item => s"\n- $item")
+      )
 
     executeTasks(newTime)
     currentTime.set(newTime)
@@ -89,7 +97,9 @@ class ExplicitlyTriggeredScheduler(@unused config: Config, log: LoggingAdapter, 
     }
   }
 
-  private def schedule(initialDelay: FiniteDuration, interval: Option[FiniteDuration], runnable: Runnable): Cancellable = {
+  private def schedule(initialDelay: FiniteDuration,
+                       interval: Option[FiniteDuration],
+                       runnable: Runnable): Cancellable = {
     val firstTime = currentTime.get + initialDelay.toMillis
     val item = Item(firstTime, interval, runnable)
     log.debug("Scheduled item for {}: {}", firstTime, item)

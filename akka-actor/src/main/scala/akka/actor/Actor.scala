@@ -258,7 +258,7 @@ object OriginalRestartException {
   def unapply(ex: PostRestartException): Option[Throwable] = {
     @tailrec def rec(ex: PostRestartException): Option[Throwable] = ex match {
       case PostRestartException(_, _, e: PostRestartException) => rec(e)
-      case PostRestartException(_, _, e) => Some(e)
+      case PostRestartException(_, _, e)                       => Some(e)
     }
     rec(ex)
   }
@@ -616,7 +616,7 @@ trait Actor {
   @throws(classOf[Exception]) // when changing this you MUST also change ActorDocTest
   //#lifecycle-hooks
   def preRestart(@unused reason: Throwable, @unused message: Option[Any]): Unit = {
-    context.children foreach { child =>
+    context.children.foreach { child =>
       context.unwatch(child)
       context.stop(child)
     }
@@ -649,7 +649,7 @@ trait Actor {
   def unhandled(message: Any): Unit = {
     message match {
       case Terminated(dead) => throw DeathPactException(dead)
-      case _ => context.system.eventStream.publish(UnhandledMessage(message, sender(), self))
+      case _                => context.system.eventStream.publish(UnhandledMessage(message, sender(), self))
     }
   }
 }

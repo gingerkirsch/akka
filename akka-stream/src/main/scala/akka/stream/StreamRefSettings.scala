@@ -17,6 +17,7 @@ object StreamRefSettings {
 
   /** Java API */
   def create(system: ActorSystem): StreamRefSettings = apply(system)
+
   /** Scala API */
   def apply(system: ActorSystem): StreamRefSettings = {
     apply(system.settings.config.getConfig("akka.stream.materializer.stream-ref"))
@@ -24,6 +25,7 @@ object StreamRefSettings {
 
   /** Java API */
   def create(c: Config): StreamRefSettings = apply(c)
+
   /** Scala API */
   def apply(c: Config): StreamRefSettings = {
     StreamRefSettingsImpl(
@@ -53,4 +55,3 @@ trait StreamRefSettings {
   def withSubscriptionTimeout(value: FiniteDuration): StreamRefSettings
   def withTerminationReceivedBeforeCompletionLeeway(value: FiniteDuration): StreamRefSettings
 }
-

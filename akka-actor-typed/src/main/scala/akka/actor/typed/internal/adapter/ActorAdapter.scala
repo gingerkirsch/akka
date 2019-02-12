@@ -15,7 +15,7 @@ import scala.annotation.tailrec
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import akka.{ actor => untyped }
+import akka.{actor => untyped}
 import akka.annotation.InternalApi
 import akka.util.OptionVal
 
@@ -36,7 +36,9 @@ import akka.util.OptionVal
 /**
  * INTERNAL API
  */
-@InternalApi private[typed] class ActorAdapter[T](_initialBehavior: Behavior[T]) extends untyped.Actor with untyped.ActorLogging {
+@InternalApi private[typed] class ActorAdapter[T](_initialBehavior: Behavior[T])
+    extends untyped.Actor
+    with untyped.ActorLogging {
   import Behavior._
 
   protected var behavior: Behavior[T] = _initialBehavior
@@ -148,10 +150,11 @@ import akka.util.OptionVal
     case ex =>
       recordChildFailure(ex)
       val logMessage = ex match {
-        case e: ActorInitializationException if e.getCause ne null => e.getCause match {
-          case ex: InvocationTargetException if ex.getCause ne null => ex.getCause.getMessage
-          case ex => ex.getMessage
-        }
+        case e: ActorInitializationException if e.getCause ne null =>
+          e.getCause match {
+            case ex: InvocationTargetException if ex.getCause ne null => ex.getCause.getMessage
+            case ex                                                   => ex.getMessage
+          }
         case e => e.getMessage
       }
       // log at Error as that is what the supervision strategy would have done.
@@ -200,10 +203,11 @@ import akka.util.OptionVal
       case null                   => // skip PostStop
       case _: DeferredBehavior[_] =>
       // Do not undefer a DeferredBehavior as that may cause creation side-effects, which we do not want on termination.
-      case s: StoppedBehavior[_] => s.postStop match {
-        case OptionVal.Some(postStop) => Behavior.interpretSignal(postStop, ctx, PostStop)
-        case OptionVal.None           => // no postStop behavior defined
-      }
+      case s: StoppedBehavior[_] =>
+        s.postStop match {
+          case OptionVal.Some(postStop) => Behavior.interpretSignal(postStop, ctx, PostStop)
+          case OptionVal.None           => // no postStop behavior defined
+        }
       case b => Behavior.interpretSignal(b, ctx, PostStop)
     }
 
@@ -253,6 +257,7 @@ private[typed] class GuardianActorAdapter[T](_initialBehavior: Behavior[T]) exte
     super.postStop()
   }
 }
+
 /**
  * INTERNAL API
  */

@@ -6,7 +6,7 @@ package akka.camel.javaapi
 
 import akka.actor.UntypedActor
 import akka.camel._
-import org.apache.camel.{ ProducerTemplate }
+import org.apache.camel.{ProducerTemplate}
 import org.apache.camel.impl.DefaultCamelContext
 
 /**
@@ -16,6 +16,7 @@ import org.apache.camel.impl.DefaultCamelContext
  */
 @Deprecated
 abstract class UntypedProducerActor extends UntypedActor with ProducerSupport {
+
   /**
    * Called before the message is sent to the endpoint specified by <code>getEndpointUri</code>. The original
    * message is passed as argument. By default, this method simply returns the argument but may be overridden

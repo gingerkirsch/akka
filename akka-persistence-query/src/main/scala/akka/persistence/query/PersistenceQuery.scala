@@ -7,8 +7,8 @@ package akka.persistence.query
 import akka.actor._
 import akka.annotation.InternalApi
 import akka.persistence.query.scaladsl.ReadJournal
-import akka.persistence.{ PersistencePlugin, PluginProvider }
-import com.typesafe.config.{ Config, ConfigFactory }
+import akka.persistence.{PersistencePlugin, PluginProvider}
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.reflect.ClassTag
 
@@ -16,6 +16,7 @@ import scala.reflect.ClassTag
  * Persistence extension for queries.
  */
 object PersistenceQuery extends ExtensionId[PersistenceQuery] with ExtensionIdProvider {
+
   /**
    * Java API.
    */
@@ -35,8 +36,12 @@ object PersistenceQuery extends ExtensionId[PersistenceQuery] with ExtensionIdPr
 }
 
 class PersistenceQuery(system: ExtendedActorSystem)
-  extends PersistencePlugin[scaladsl.ReadJournal, javadsl.ReadJournal, ReadJournalProvider](system)(ClassTag(classOf[ReadJournalProvider]), PersistenceQuery.pluginProvider)
-  with Extension {
+    extends PersistencePlugin[scaladsl.ReadJournal, javadsl.ReadJournal, ReadJournalProvider](system)(
+      ClassTag(classOf[ReadJournalProvider]),
+      PersistenceQuery.pluginProvider
+    )
+    with Extension {
+
   /**
    * Scala API: Returns the [[akka.persistence.query.scaladsl.ReadJournal]] specified by the given
    * read journal configuration entry.
@@ -58,10 +63,12 @@ class PersistenceQuery(system: ExtendedActorSystem)
    * Java API: Returns the [[akka.persistence.query.javadsl.ReadJournal]] specified by the given
    * read journal configuration entry.
    */
-  final def getReadJournalFor[T <: javadsl.ReadJournal](clazz: Class[T], readJournalPluginId: String, readJournalPluginConfig: Config): T =
+  final def getReadJournalFor[T <: javadsl.ReadJournal](clazz: Class[T],
+                                                        readJournalPluginId: String,
+                                                        readJournalPluginConfig: Config): T =
     pluginFor(readJournalPluginId, readJournalPluginConfig).javadslPlugin.asInstanceOf[T]
 
-  final def getReadJournalFor[T <: javadsl.ReadJournal](clazz: Class[T], readJournalPluginId: String): T = getReadJournalFor[T](clazz, readJournalPluginId, ConfigFactory.empty())
+  final def getReadJournalFor[T <: javadsl.ReadJournal](clazz: Class[T], readJournalPluginId: String): T =
+    getReadJournalFor[T](clazz, readJournalPluginId, ConfigFactory.empty())
 
 }
-

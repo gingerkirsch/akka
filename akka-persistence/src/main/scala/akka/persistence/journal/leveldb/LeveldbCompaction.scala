@@ -4,7 +4,7 @@
 
 package akka.persistence.journal.leveldb
 
-import akka.actor.{ Actor, ActorLogging }
+import akka.actor.{Actor, ActorLogging}
 
 private[persistence] object LeveldbCompaction {
 
@@ -86,7 +86,8 @@ private[persistence] trait CompactionSegmentManagement {
   private def isCompactionRequired(persistenceId: String, toSeqNr: Long): Boolean =
     compactionSegment(persistenceId, toSeqNr) > latestCompactionSegment(persistenceId)
 
-  private def latestCompactionSegment(persistenceId: String): Long = latestCompactionSegments.getOrElse(persistenceId, 0L)
+  private def latestCompactionSegment(persistenceId: String): Long =
+    latestCompactionSegments.getOrElse(persistenceId, 0L)
 
   private def compactionInterval(persistenceId: String): Long =
     compactionIntervals.getOrElse(persistenceId, compactionIntervals.getOrElse(Wildcard, 0L))

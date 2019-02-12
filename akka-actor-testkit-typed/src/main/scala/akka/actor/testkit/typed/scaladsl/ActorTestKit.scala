@@ -7,11 +7,11 @@ package akka.actor.testkit.typed.scaladsl
 import java.util.concurrent.TimeoutException
 
 import akka.actor.typed.scaladsl.AskPattern._
-import akka.actor.typed.{ ActorRef, ActorSystem, Behavior, Props }
-import akka.annotation.{ ApiMayChange, InternalApi }
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior, Props}
+import akka.annotation.{ApiMayChange, InternalApi}
 import akka.actor.testkit.typed.TestKitSettings
-import akka.actor.testkit.typed.internal.{ ActorTestKitGuardian, TestKitUtils }
-import com.typesafe.config.{ Config, ConfigFactory }
+import akka.actor.testkit.typed.internal.{ActorTestKitGuardian, TestKitUtils}
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -98,10 +98,7 @@ object ActorTestKit {
    * Shutdown the given [[akka.actor.typed.ActorSystem]] and block until it shuts down
    * or the `duration` hits. If the timeout hits `verifySystemShutdown` decides
    */
-  def shutdown(
-    system:               ActorSystem[_],
-    timeout:              Duration,
-    throwIfShutdownFails: Boolean        = false): Unit =
+  def shutdown(system: ActorSystem[_], timeout: Duration, throwIfShutdownFails: Boolean = false): Unit =
     TestKitUtils.shutdown(system, timeout, throwIfShutdownFails)
 
   // place holder for no custom config specified to avoid the boilerplate
@@ -180,12 +177,15 @@ final class ActorTestKit private[akka] (val name: String, val config: Config, se
    * It can only be used for actors that were spawned by this `ActorTestKit`.
    * Other actors will not be stopped by this method.
    */
-  def stop[T](ref: ActorRef[T], max: FiniteDuration = timeout.duration): Unit = try {
-    Await.result(internalSystem ? { x: ActorRef[ActorTestKitGuardian.Ack.type] => ActorTestKitGuardian.StopActor(ref, x) }, max)
-  } catch {
-    case _: TimeoutException =>
-      assert(false, s"timeout ($max) during stop() waiting for actor [${ref.path}] to stop")
-  }
+  def stop[T](ref: ActorRef[T], max: FiniteDuration = timeout.duration): Unit =
+    try {
+      Await.result(internalSystem ? { x: ActorRef[ActorTestKitGuardian.Ack.type] =>
+        ActorTestKitGuardian.StopActor(ref, x)
+      }, max)
+    } catch {
+      case _: TimeoutException =>
+        assert(false, s"timeout ($max) during stop() waiting for actor [${ref.path}] to stop")
+    }
 
   /**
    * Shortcut for creating a new test probe for the testkit actor system

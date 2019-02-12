@@ -4,12 +4,12 @@
 
 package akka.stream
 
-import akka.{ Done, NotUsed }
+import akka.{Done, NotUsed}
 import akka.stream.stage._
 
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import scala.collection.concurrent.TrieMap
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -53,13 +53,16 @@ object KillSwitches {
   def singleBidi[T1, T2]: Graph[BidiShape[T1, T1, T2, T2], UniqueKillSwitch] =
     UniqueBidiKillSwitchStage.asInstanceOf[Graph[BidiShape[T1, T1, T2, T2], UniqueKillSwitch]]
 
-  abstract class KillableGraphStageLogic(val terminationSignal: Future[Done], _shape: Shape) extends GraphStageLogic(_shape) {
+  abstract class KillableGraphStageLogic(val terminationSignal: Future[Done], _shape: Shape)
+      extends GraphStageLogic(_shape) {
     override def preStart(): Unit = {
       terminationSignal.value match {
         case Some(status) => onSwitch(status)
-        case _ =>
+        case _            =>
           // callback.invoke is a simple actor send, so it is fine to run on the invoking thread
-          terminationSignal.onComplete(getAsyncCallback[Try[Done]](onSwitch).invoke)(akka.dispatch.ExecutionContexts.sameThreadExecutionContext)
+          terminationSignal.onComplete(getAsyncCallback[Try[Done]](onSwitch).invoke)(
+            akka.dispatch.ExecutionContexts.sameThreadExecutionContext
+          )
       }
     }
 
@@ -69,7 +72,8 @@ object KillSwitches {
     }
   }
 
-  private[stream] object UniqueKillSwitchStage extends GraphStageWithMaterializedValue[FlowShape[Any, Any], UniqueKillSwitch] {
+  private[stream] object UniqueKillSwitchStage
+      extends GraphStageWithMaterializedValue[FlowShape[Any, Any], UniqueKillSwitch] {
     override val initialAttributes = Attributes.name("breaker")
     override val shape = FlowShape(Inlet[Any]("KillSwitch.in"), Outlet[Any]("KillSwitch.out"))
     override def toString: String = "UniqueKillSwitchFlow"
@@ -89,12 +93,14 @@ object KillSwitches {
     }
   }
 
-  private[stream] object UniqueBidiKillSwitchStage extends GraphStageWithMaterializedValue[BidiShape[Any, Any, Any, Any], UniqueKillSwitch] {
+  private[stream] object UniqueBidiKillSwitchStage
+      extends GraphStageWithMaterializedValue[BidiShape[Any, Any, Any, Any], UniqueKillSwitch] {
 
     override val initialAttributes = Attributes.name("breaker")
-    override val shape = BidiShape(
-      Inlet[Any]("KillSwitchBidi.in1"), Outlet[Any]("KillSwitchBidi.out1"),
-      Inlet[Any]("KillSwitchBidi.in2"), Outlet[Any]("KillSwitchBidi.out2"))
+    override val shape = BidiShape(Inlet[Any]("KillSwitchBidi.in1"),
+                                   Outlet[Any]("KillSwitchBidi.out1"),
+                                   Inlet[Any]("KillSwitchBidi.in2"),
+                                   Outlet[Any]("KillSwitchBidi.out2"))
     override def toString: String = "UniqueKillSwitchBidi"
 
     override def createLogicAndMaterializedValue(attr: Attributes) = {
@@ -103,16 +109,22 @@ object KillSwitches {
 
       val logic = new KillableGraphStageLogic(promise.future, shape) {
 
-        setHandler(shape.in1, new InHandler {
-          override def onPush(): Unit = push(shape.out1, grab(shape.in1))
-          override def onUpstreamFinish(): Unit = complete(shape.out1)
-          override def onUpstreamFailure(ex: Throwable): Unit = fail(shape.out1, ex)
-        })
-        setHandler(shape.in2, new InHandler {
-          override def onPush(): Unit = push(shape.out2, grab(shape.in2))
-          override def onUpstreamFinish(): Unit = complete(shape.out2)
-          override def onUpstreamFailure(ex: Throwable): Unit = fail(shape.out2, ex)
-        })
+        setHandler(
+          shape.in1,
+          new InHandler {
+            override def onPush(): Unit = push(shape.out1, grab(shape.in1))
+            override def onUpstreamFinish(): Unit = complete(shape.out1)
+            override def onUpstreamFailure(ex: Throwable): Unit = fail(shape.out1, ex)
+          }
+        )
+        setHandler(
+          shape.in2,
+          new InHandler {
+            override def onPush(): Unit = push(shape.out2, grab(shape.in2))
+            override def onUpstreamFinish(): Unit = complete(shape.out2)
+            override def onUpstreamFailure(ex: Throwable): Unit = fail(shape.out2, ex)
+          }
+        )
         setHandler(shape.out1, new OutHandler {
           override def onPull(): Unit = pull(shape.in1)
           override def onDownstreamFinish(): Unit = cancel(shape.in1)
@@ -138,10 +150,12 @@ object KillSwitches {
  */
 //#kill-switch
 trait KillSwitch {
+
   /**
    * After calling [[KillSwitch#shutdown()]] the linked [[Graph]]s of [[FlowShape]] are completed normally.
    */
   def shutdown(): Unit
+
   /**
    * After calling [[KillSwitch#abort()]] the linked [[Graph]]s of [[FlowShape]] are failed.
    */
@@ -281,9 +295,12 @@ final class SharedKillSwitch private[stream] (val name: String) extends KillSwit
 
     override def toString: String = s"SharedKillSwitchFlow(switch: $name)"
 
-    override def createLogicAndMaterializedValue(inheritedAttributes: Attributes): (GraphStageLogic, SharedKillSwitch) = {
+    override def createLogicAndMaterializedValue(
+        inheritedAttributes: Attributes
+    ): (GraphStageLogic, SharedKillSwitch) = {
       val shutdownListener = terminationSignal.createListener()
-      val logic = new KillSwitches.KillableGraphStageLogic(shutdownListener.future, shape) with InHandler with OutHandler {
+      val logic = new KillSwitches.KillableGraphStageLogic(shutdownListener.future, shape) with InHandler
+      with OutHandler {
         setHandler(shape.in, this)
         setHandler(shape.out, this)
 

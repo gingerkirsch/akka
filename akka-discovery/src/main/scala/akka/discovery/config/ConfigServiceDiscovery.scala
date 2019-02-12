@@ -6,8 +6,8 @@ package akka.discovery.config
 
 import akka.actor.ExtendedActorSystem
 import akka.annotation.InternalApi
-import akka.discovery.{ Lookup, ServiceDiscovery }
-import akka.discovery.ServiceDiscovery.{ Resolved, ResolvedTarget }
+import akka.discovery.{Lookup, ServiceDiscovery}
+import akka.discovery.ServiceDiscovery.{Resolved, ResolvedTarget}
 import akka.event.Logging
 import com.typesafe.config.Config
 

@@ -15,6 +15,7 @@ import scala.annotation.unchecked.uncheckedVariance
  * @see [[akka.stream.stage.GraphStage]]
  */
 trait Graph[+S <: Shape, +M] {
+
   /**
    * Type-level accessor for the shape parameter of this graph.
    */
@@ -23,6 +24,7 @@ trait Graph[+S <: Shape, +M] {
    * The shape of a graph is all that is externally visible: its inlets and outlets.
    */
   def shape: S
+
   /**
    * INTERNAL API.
    *
@@ -46,7 +48,7 @@ trait Graph[+S <: Shape, +M] {
    */
   def async(dispatcher: String) =
     addAttributes(
-      Attributes.asyncBoundary and ActorAttributes.dispatcher(dispatcher)
+      Attributes.asyncBoundary.and(ActorAttributes.dispatcher(dispatcher))
     )
 
   /**
@@ -57,8 +59,9 @@ trait Graph[+S <: Shape, +M] {
    */
   def async(dispatcher: String, inputBufferSize: Int) =
     addAttributes(
-      Attributes.asyncBoundary and ActorAttributes.dispatcher(dispatcher)
-        and Attributes.inputBuffer(inputBufferSize, inputBufferSize)
+      Attributes.asyncBoundary
+        .and(ActorAttributes.dispatcher(dispatcher))
+        .and(Attributes.inputBuffer(inputBufferSize, inputBufferSize))
     )
 
   /**
@@ -67,7 +70,7 @@ trait Graph[+S <: Shape, +M] {
    * If this Source is a composite of multiple graphs, new attributes on the composite will be
    * less specific than attributes set directly on the individual graphs of the composite.
    */
-  def addAttributes(attr: Attributes): Graph[S, M] = withAttributes(traversalBuilder.attributes and attr)
+  def addAttributes(attr: Attributes): Graph[S, M] = withAttributes(traversalBuilder.attributes.and(attr))
 }
 
 /**

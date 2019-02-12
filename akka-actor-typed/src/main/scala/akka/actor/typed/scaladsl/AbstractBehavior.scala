@@ -4,7 +4,7 @@
 
 package akka.actor.typed.scaladsl
 
-import akka.actor.typed.{ Behavior, ExtensibleBehavior, Signal, TypedActorContext }
+import akka.actor.typed.{Behavior, ExtensibleBehavior, Signal, TypedActorContext}
 
 /**
  * An actor `Behavior` can be implemented by extending this class and implement the

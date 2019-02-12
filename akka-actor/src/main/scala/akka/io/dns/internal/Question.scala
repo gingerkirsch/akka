@@ -5,8 +5,8 @@
 package akka.io.dns.internal
 
 import akka.annotation.InternalApi
-import akka.io.dns.{ RecordClass, RecordType }
-import akka.util.{ ByteIterator, ByteString, ByteStringBuilder }
+import akka.io.dns.{RecordClass, RecordType}
+import akka.util.{ByteIterator, ByteString, ByteStringBuilder}
 
 /**
  * INTERNAL API
@@ -19,6 +19,7 @@ private[akka] final case class Question(name: String, qType: RecordType, qClass:
     RecordClassSerializer.write(out, qClass)
   }
 }
+
 /**
  * INTERNAL API
  */

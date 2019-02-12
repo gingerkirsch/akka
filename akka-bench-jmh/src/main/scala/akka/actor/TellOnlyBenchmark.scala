@@ -7,7 +7,7 @@ package akka.actor
 import akka.dispatch._
 import akka.testkit.TestProbe
 import akka.util.Helpers.ConfigOps
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 import scala.concurrent.duration._
@@ -26,8 +26,10 @@ class TellOnlyBenchmark {
 
   @Setup(Level.Trial)
   def setup(): Unit = {
-    system = ActorSystem("TellOnlyBenchmark", ConfigFactory.parseString(
-      s"""| akka {
+    system = ActorSystem(
+      "TellOnlyBenchmark",
+      ConfigFactory.parseString(
+        s"""| akka {
           |   log-dead-letters = off
           |   actor {
           |     default-dispatcher {
@@ -47,7 +49,8 @@ class TellOnlyBenchmark {
           |   mailbox-type = "akka.actor.TellOnlyBenchmark$$UnboundedDroppingMailbox"
           | }
           | """.stripMargin
-    ))
+      )
+    )
   }
 
   @TearDown(Level.Trial)
@@ -98,7 +101,7 @@ object TellOnlyBenchmark {
   class Echo extends Actor {
     def receive = {
       case s @ `stop` =>
-        context stop self
+        context.stop(self)
       case m => sender ! m
     }
   }
@@ -121,14 +124,18 @@ object TellOnlyBenchmark {
   }
 
   class DroppingDispatcher(
-    _configurator:                   MessageDispatcherConfigurator,
-    _id:                             String,
-    _throughput:                     Int,
-    _throughputDeadlineTime:         Duration,
-    _executorServiceFactoryProvider: ExecutorServiceFactoryProvider,
-    _shutdownTimeout:                FiniteDuration
-  )
-    extends Dispatcher(_configurator, _id, _throughput, _throughputDeadlineTime, _executorServiceFactoryProvider, _shutdownTimeout) {
+      _configurator: MessageDispatcherConfigurator,
+      _id: String,
+      _throughput: Int,
+      _throughputDeadlineTime: Duration,
+      _executorServiceFactoryProvider: ExecutorServiceFactoryProvider,
+      _shutdownTimeout: FiniteDuration
+  ) extends Dispatcher(_configurator,
+                         _id,
+                         _throughput,
+                         _throughputDeadlineTime,
+                         _executorServiceFactoryProvider,
+                         _shutdownTimeout) {
 
     override protected[akka] def dispatch(receiver: ActorCell, invocation: Envelope): Unit = {
       val mbox = receiver.mailbox
@@ -141,7 +148,7 @@ object TellOnlyBenchmark {
   }
 
   class DroppingDispatcherConfigurator(config: Config, prerequisites: DispatcherPrerequisites)
-    extends MessageDispatcherConfigurator(config, prerequisites) {
+      extends MessageDispatcherConfigurator(config, prerequisites) {
 
     override def dispatcher(): MessageDispatcher = new DroppingDispatcher(
       this,

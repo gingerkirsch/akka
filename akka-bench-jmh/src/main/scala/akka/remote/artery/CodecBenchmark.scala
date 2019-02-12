@@ -9,7 +9,7 @@ import akka.Done
 import akka.NotUsed
 import akka.remote._
 import akka.remote.artery.compress._
-import akka.serialization.{ BaseSerializer, ByteBufferSerializer, SerializationExtension }
+import akka.serialization.{BaseSerializer, ByteBufferSerializer, SerializationExtension}
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
 import akka.stream.scaladsl._
@@ -93,9 +93,11 @@ class CodecBenchmark {
     )
     val config = configType match {
       case RemoteInstrument =>
-        ConfigFactory.parseString(
-          s"""akka.remote.artery.advanced.instruments = [ "${classOf[DummyRemoteInstrument].getName}" ]"""
-        ).withFallback(commonConfig)
+        ConfigFactory
+          .parseString(
+            s"""akka.remote.artery.advanced.instruments = [ "${classOf[DummyRemoteInstrument].getName}" ]"""
+          )
+          .withFallback(commonConfig)
       case _ =>
         commonConfig
     }
@@ -117,9 +119,9 @@ class CodecBenchmark {
     val actorOnSystemB = systemB.actorOf(Props.empty, "b")
     val addressB = systemB.asInstanceOf[ExtendedActorSystem].provider.getDefaultAddress
     val rootB = RootActorPath(addressB)
-    remoteRefB =
-      Await.result(system.actorSelection(rootB / "user" / "b").resolveOne(5.seconds), 5.seconds)
-        .asInstanceOf[RemoteActorRef]
+    remoteRefB = Await
+      .result(system.actorSelection(rootB / "user" / "b").resolveOne(5.seconds), 5.seconds)
+      .asInstanceOf[RemoteActorRef]
     resolvedRef = actorOnSystemA.asInstanceOf[InternalActorRef]
     recipientStringB = remoteRefB.path.toSerializationFormatWithAddress(addressB)
 
@@ -128,25 +130,40 @@ class CodecBenchmark {
     } else null
     val envelope = new EnvelopeBuffer(envelopeTemplateBuffer)
     val outboundEnvelope = OutboundEnvelope(OptionVal.None, payload, OptionVal.None)
-    headerIn setVersion ArteryTransport.HighestVersion
-    headerIn setUid 42
-    headerIn setSenderActorRef actorOnSystemA
-    headerIn setRecipientActorRef remoteRefB
-    headerIn setManifest ""
-    headerIn setRemoteInstruments remoteInstruments
+    headerIn.setVersion(ArteryTransport.HighestVersion)
+    headerIn.setUid(42)
+    headerIn.setSenderActorRef(actorOnSystemA)
+    headerIn.setRecipientActorRef(remoteRefB)
+    headerIn.setManifest("")
+    headerIn.setRemoteInstruments(remoteInstruments)
     MessageSerializer.serializeForArtery(SerializationExtension(system), outboundEnvelope, headerIn, envelope)
     envelope.byteBuffer.flip()
 
     // Now build up the graphs
     val encoder: Flow[OutboundEnvelope, EnvelopeBuffer, Encoder.OutboundCompressionAccess] =
-      Flow.fromGraph(new Encoder(uniqueLocalAddress, system.asInstanceOf[ExtendedActorSystem], outboundEnvelopePool,
-        envelopePool, streamId = 1, debugLogSend = false, version = ArteryTransport.HighestVersion))
+      Flow.fromGraph(
+        new Encoder(
+          uniqueLocalAddress,
+          system.asInstanceOf[ExtendedActorSystem],
+          outboundEnvelopePool,
+          envelopePool,
+          streamId = 1,
+          debugLogSend = false,
+          version = ArteryTransport.HighestVersion
+        )
+      )
     val encoderInput: Flow[String, OutboundEnvelope, NotUsed] =
       Flow[String].map(msg => outboundEnvelopePool.acquire().init(OptionVal.None, payload, OptionVal.Some(remoteRefB)))
     val compressions = new InboundCompressionsImpl(system, inboundContext, inboundContext.settings.Advanced.Compression)
     val decoder: Flow[EnvelopeBuffer, InboundEnvelope, InboundCompressionAccess] =
-      Flow.fromGraph(new Decoder(inboundContext, system.asInstanceOf[ExtendedActorSystem],
-        uniqueLocalAddress, inboundContext.settings, compressions, inboundEnvelopePool))
+      Flow.fromGraph(
+        new Decoder(inboundContext,
+                    system.asInstanceOf[ExtendedActorSystem],
+                    uniqueLocalAddress,
+                    inboundContext.settings,
+                    compressions,
+                    inboundEnvelopePool)
+      )
     val deserializer: Flow[InboundEnvelope, InboundEnvelope, NotUsed] =
       Flow.fromGraph(new Deserializer(inboundContext, system.asInstanceOf[ExtendedActorSystem], envelopePool))
     val decoderInput: Flow[String, EnvelopeBuffer, NotUsed] = Flow[String]
@@ -192,8 +209,7 @@ class CodecBenchmark {
   }
 
   @TearDown(Level.Iteration)
-  def tearDownIteration(): Unit = {
-  }
+  def tearDownIteration(): Unit = {}
 
   @Benchmark
   @OperationsPerInvocation(OperationsPerInvocation)
@@ -201,7 +217,8 @@ class CodecBenchmark {
     val latch = new CountDownLatch(1)
     val N = OperationsPerInvocation
 
-    Source.fromGraph(new BenchTestSourceSameElement(N, "elem"))
+    Source
+      .fromGraph(new BenchTestSourceSameElement(N, "elem"))
       .runWith(new LatchSink(N, latch))(materializer)
 
     if (!latch.await(30, TimeUnit.SECONDS))
@@ -214,7 +231,8 @@ class CodecBenchmark {
     val latch = new CountDownLatch(1)
     val N = OperationsPerInvocation
 
-    Source.fromGraph(new BenchTestSourceSameElement(N, "elem"))
+    Source
+      .fromGraph(new BenchTestSourceSameElement(N, "elem"))
       .via(encodeGraph)
       .runWith(new LatchSink(N, latch))(materializer)
 
@@ -228,7 +246,8 @@ class CodecBenchmark {
     val latch = new CountDownLatch(1)
     val N = OperationsPerInvocation
 
-    Source.fromGraph(new BenchTestSourceSameElement(N, "elem"))
+    Source
+      .fromGraph(new BenchTestSourceSameElement(N, "elem"))
       .via(decodeGraph)
       .runWith(new LatchSink(N, latch))(materializer)
 
@@ -242,7 +261,8 @@ class CodecBenchmark {
     val latch = new CountDownLatch(1)
     val N = OperationsPerInvocation
 
-    Source.fromGraph(new BenchTestSourceSameElement(N, "elem"))
+    Source
+      .fromGraph(new BenchTestSourceSameElement(N, "elem"))
       .via(encodeDecodeGraph)
       .runWith(new LatchSink(N, latch))(materializer)
 
@@ -297,12 +317,18 @@ object CodecBenchmark {
 
     override def identifier: Byte = 7 // Lucky number slevin
 
-    override def remoteWriteMetadata(recipient: ActorRef, message: Object, sender: ActorRef, buffer: ByteBuffer): Unit = {
+    override def remoteWriteMetadata(recipient: ActorRef,
+                                     message: Object,
+                                     sender: ActorRef,
+                                     buffer: ByteBuffer): Unit = {
       buffer.putInt(Metadata.length)
       buffer.put(Metadata)
     }
 
-    override def remoteReadMetadata(recipient: ActorRef, message: Object, sender: ActorRef, buffer: ByteBuffer): Unit = {
+    override def remoteReadMetadata(recipient: ActorRef,
+                                    message: Object,
+                                    sender: ActorRef,
+                                    buffer: ByteBuffer): Unit = {
       val length = Metadata.length
       val metaLength = buffer.getInt
       @tailrec
@@ -315,8 +341,16 @@ object CodecBenchmark {
         throw new IOException(s"DummyInstrument deserialization error. Expected ${Metadata.toString}")
     }
 
-    override def remoteMessageSent(recipient: ActorRef, message: Object, sender: ActorRef, size: Int, time: Long): Unit = ()
+    override def remoteMessageSent(recipient: ActorRef,
+                                   message: Object,
+                                   sender: ActorRef,
+                                   size: Int,
+                                   time: Long): Unit = ()
 
-    override def remoteMessageReceived(recipient: ActorRef, message: Object, sender: ActorRef, size: Int, time: Long): Unit = ()
+    override def remoteMessageReceived(recipient: ActorRef,
+                                       message: Object,
+                                       sender: ActorRef,
+                                       size: Int,
+                                       time: Long): Unit = ()
   }
 }

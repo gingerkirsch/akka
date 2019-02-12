@@ -8,7 +8,7 @@ import java.util.function.Supplier
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import akka.testkit.{ DebugFilter, ErrorFilter, InfoFilter, WarningFilter }
+import akka.testkit.{DebugFilter, ErrorFilter, InfoFilter, WarningFilter}
 
 class EventFilter(clazz: Class[_], system: ActorSystem) {
 

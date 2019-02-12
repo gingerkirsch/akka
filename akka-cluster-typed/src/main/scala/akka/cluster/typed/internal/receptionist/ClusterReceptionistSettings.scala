@@ -12,7 +12,7 @@ import akka.util.Helpers.toRootLowerCase
 import com.typesafe.config.Config
 
 import scala.concurrent.duration._
-import scala.concurrent.duration.{ FiniteDuration, MILLISECONDS }
+import scala.concurrent.duration.{FiniteDuration, MILLISECONDS}
 
 /**
  * Internal API
@@ -45,8 +45,6 @@ private[akka] object ClusterReceptionistSettings {
  * Internal API
  */
 @InternalApi
-private[akka] case class ClusterReceptionistSettings(
-  writeConsistency:    WriteConsistency,
-  pruningInterval:     FiniteDuration,
-  distributedKeyCount: Int)
-
+private[akka] case class ClusterReceptionistSettings(writeConsistency: WriteConsistency,
+                                                     pruningInterval: FiniteDuration,
+                                                     distributedKeyCount: Int)

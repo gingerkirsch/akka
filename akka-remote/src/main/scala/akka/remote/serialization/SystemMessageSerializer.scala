@@ -4,10 +4,10 @@
 
 package akka.remote.serialization
 
-import akka.actor.{ ActorInitializationException, ActorRef, ExtendedActorSystem, InternalActorRef }
+import akka.actor.{ActorInitializationException, ActorRef, ExtendedActorSystem, InternalActorRef}
 import akka.dispatch.sysmsg._
-import akka.remote.{ ContainerFormats, SystemMessageFormats }
-import akka.serialization.{ BaseSerializer, Serialization, SerializationExtension }
+import akka.remote.{ContainerFormats, SystemMessageFormats}
+import akka.serialization.{BaseSerializer, Serialization, SerializationExtension}
 
 class SystemMessageSerializer(val system: ExtendedActorSystem) extends BaseSerializer {
   import SystemMessageFormats.SystemMessage.Type._
@@ -45,28 +45,32 @@ class SystemMessageSerializer(val system: ExtendedActorSystem) extends BaseSeria
 
       case Supervise(child, async) =>
         builder.setType(SUPERVISE)
-        val superviseData = SystemMessageFormats.SuperviseData.newBuilder()
+        val superviseData = SystemMessageFormats.SuperviseData
+          .newBuilder()
           .setChild(serializeActorRef(child))
           .setAsync(async)
         builder.setSuperviseData(superviseData)
 
       case Watch(watchee, watcher) =>
         builder.setType(WATCH)
-        val watchData = SystemMessageFormats.WatchData.newBuilder()
+        val watchData = SystemMessageFormats.WatchData
+          .newBuilder()
           .setWatchee(serializeActorRef(watchee))
           .setWatcher(serializeActorRef(watcher))
         builder.setWatchData(watchData)
 
       case Unwatch(watchee, watcher) =>
         builder.setType(UNWATCH)
-        val watchData = SystemMessageFormats.WatchData.newBuilder()
+        val watchData = SystemMessageFormats.WatchData
+          .newBuilder()
           .setWatchee(serializeActorRef(watchee))
           .setWatcher(serializeActorRef(watcher))
         builder.setWatchData(watchData)
 
       case Failed(child, cause, uid) =>
         builder.setType(FAILED)
-        val failedData = SystemMessageFormats.FailedData.newBuilder()
+        val failedData = SystemMessageFormats.FailedData
+          .newBuilder()
           .setChild(serializeActorRef(child))
           .setUid(uid)
         builder.setCauseData(serializeThrowable(cause))
@@ -74,7 +78,8 @@ class SystemMessageSerializer(val system: ExtendedActorSystem) extends BaseSeria
 
       case DeathWatchNotification(actor, existenceConfirmed, addressTerminated) =>
         builder.setType(DEATHWATCH_NOTIFICATION)
-        val deathWatchNotificationData = SystemMessageFormats.DeathWatchNotificationData.newBuilder()
+        val deathWatchNotificationData = SystemMessageFormats.DeathWatchNotificationData
+          .newBuilder()
           .setActor(serializeActorRef(actor))
           .setExistenceConfirmed(existenceConfirmed)
           .setAddressTerminated(addressTerminated)
@@ -122,24 +127,26 @@ class SystemMessageSerializer(val system: ExtendedActorSystem) extends BaseSeria
       case WATCH =>
         Watch(
           deserializeActorRef(sysmsg.getWatchData.getWatchee).asInstanceOf[InternalActorRef],
-          deserializeActorRef(sysmsg.getWatchData.getWatcher).asInstanceOf[InternalActorRef])
+          deserializeActorRef(sysmsg.getWatchData.getWatcher).asInstanceOf[InternalActorRef]
+        )
 
       case UNWATCH =>
         Unwatch(
           deserializeActorRef(sysmsg.getWatchData.getWatchee).asInstanceOf[InternalActorRef],
-          deserializeActorRef(sysmsg.getWatchData.getWatcher).asInstanceOf[InternalActorRef])
+          deserializeActorRef(sysmsg.getWatchData.getWatcher).asInstanceOf[InternalActorRef]
+        )
 
       case FAILED =>
-        Failed(
-          deserializeActorRef(sysmsg.getFailedData.getChild),
-          getCauseThrowable(sysmsg),
-          sysmsg.getFailedData.getUid.toInt)
+        Failed(deserializeActorRef(sysmsg.getFailedData.getChild),
+               getCauseThrowable(sysmsg),
+               sysmsg.getFailedData.getUid.toInt)
 
       case DEATHWATCH_NOTIFICATION =>
         DeathWatchNotification(
           deserializeActorRef(sysmsg.getDwNotificationData.getActor),
           sysmsg.getDwNotificationData.getExistenceConfirmed,
-          sysmsg.getDwNotificationData.getAddressTerminated)
+          sysmsg.getDwNotificationData.getAddressTerminated
+        )
     }
 
   private def serializeThrowable(throwable: Throwable): ContainerFormats.Payload.Builder = {
@@ -151,7 +158,8 @@ class SystemMessageSerializer(val system: ExtendedActorSystem) extends BaseSeria
   }
 
   private def serializeActorRef(actorRef: ActorRef): ContainerFormats.ActorRef.Builder = {
-    ContainerFormats.ActorRef.newBuilder()
+    ContainerFormats.ActorRef
+      .newBuilder()
       .setPath(Serialization.serializedActorPath(actorRef))
   }
 

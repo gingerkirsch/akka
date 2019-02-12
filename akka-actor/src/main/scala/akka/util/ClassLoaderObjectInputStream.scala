@@ -4,7 +4,7 @@
 
 package akka.util
 
-import java.io.{ InputStream, ObjectInputStream, ObjectStreamClass }
+import java.io.{InputStream, ObjectInputStream, ObjectStreamClass}
 
 /**
  * ClassLoaderObjectInputStream tries to utilize the provided ClassLoader to load Classes and falls
@@ -15,7 +15,8 @@ import java.io.{ InputStream, ObjectInputStream, ObjectStreamClass }
  */
 class ClassLoaderObjectInputStream(classLoader: ClassLoader, is: InputStream) extends ObjectInputStream(is) {
   override protected def resolveClass(objectStreamClass: ObjectStreamClass): Class[_] =
-    try Class.forName(objectStreamClass.getName, false, classLoader) catch {
+    try Class.forName(objectStreamClass.getName, false, classLoader)
+    catch {
       case _: ClassNotFoundException => super.resolveClass(objectStreamClass)
     }
 }

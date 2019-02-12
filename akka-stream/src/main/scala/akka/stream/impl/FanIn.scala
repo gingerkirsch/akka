@@ -5,20 +5,24 @@
 package akka.stream.impl
 
 import akka.actor._
-import akka.annotation.{ DoNotInherit, InternalApi }
-import akka.stream.{ AbruptTerminationException, ActorMaterializerSettings }
-import akka.stream.actor.{ ActorSubscriber, ActorSubscriberMessage }
-import org.reactivestreams.{ Subscriber, Subscription }
+import akka.annotation.{DoNotInherit, InternalApi}
+import akka.stream.{AbruptTerminationException, ActorMaterializerSettings}
+import akka.stream.actor.{ActorSubscriber, ActorSubscriberMessage}
+import org.reactivestreams.{Subscriber, Subscription}
 
 /**
  * INTERNAL API
  */
 @InternalApi private[akka] object FanIn {
 
-  final case class OnError(id: Int, cause: Throwable) extends DeadLetterSuppression with NoSerializationVerificationNeeded
+  final case class OnError(id: Int, cause: Throwable)
+      extends DeadLetterSuppression
+      with NoSerializationVerificationNeeded
   final case class OnComplete(id: Int) extends DeadLetterSuppression with NoSerializationVerificationNeeded
   final case class OnNext(id: Int, e: Any) extends DeadLetterSuppression with NoSerializationVerificationNeeded
-  final case class OnSubscribe(id: Int, subscription: Subscription) extends DeadLetterSuppression with NoSerializationVerificationNeeded
+  final case class OnSubscribe(id: Int, subscription: Subscription)
+      extends DeadLetterSuppression
+      with NoSerializationVerificationNeeded
 
   final case class SubInput[T](impl: ActorRef, id: Int) extends Subscriber[T] {
     override def onError(cause: Throwable): Unit = {
@@ -226,26 +230,27 @@ import org.reactivestreams.{ Subscriber, Subscription }
     }
 
     // FIXME: Eliminate re-wraps
-    def subreceive: SubReceive = new SubReceive({
-      case OnSubscribe(id, subscription) =>
-        inputs(id).subreceive(ActorSubscriber.OnSubscribe(subscription))
-      case OnNext(id, elem) =>
-        if (marked(id) && !pending(id)) markedPending += 1
-        pending(id, on = true)
-        receivedInput = true
-        inputs(id).subreceive(ActorSubscriberMessage.OnNext(elem))
-      case OnComplete(id) =>
-        if (!pending(id)) {
-          if (marked(id) && !depleted(id)) markedDepleted += 1
-          depleted(id, on = true)
-          onDepleted(id)
-        }
-        registerCompleted(id)
-        inputs(id).subreceive(ActorSubscriberMessage.OnComplete)
-        if (!receivedInput && isAllCompleted) onCompleteWhenNoInput()
-      case OnError(id, e) =>
-        onError(id, e)
-    })
+    def subreceive: SubReceive =
+      new SubReceive({
+        case OnSubscribe(id, subscription) =>
+          inputs(id).subreceive(ActorSubscriber.OnSubscribe(subscription))
+        case OnNext(id, elem) =>
+          if (marked(id) && !pending(id)) markedPending += 1
+          pending(id, on = true)
+          receivedInput = true
+          inputs(id).subreceive(ActorSubscriberMessage.OnNext(elem))
+        case OnComplete(id) =>
+          if (!pending(id)) {
+            if (marked(id) && !depleted(id)) markedDepleted += 1
+            depleted(id, on = true)
+            onDepleted(id)
+          }
+          registerCompleted(id)
+          inputs(id).subreceive(ActorSubscriberMessage.OnComplete)
+          if (!receivedInput && isAllCompleted) onCompleteWhenNoInput()
+        case OnError(id, e) =>
+          onError(id, e)
+      })
 
   }
 
@@ -254,7 +259,10 @@ import org.reactivestreams.{ Subscriber, Subscription }
 /**
  * INTERNAL API
  */
-@DoNotInherit private[akka] class FanIn(val settings: ActorMaterializerSettings, val inputCount: Int) extends Actor with ActorLogging with Pump {
+@DoNotInherit private[akka] class FanIn(val settings: ActorMaterializerSettings, val inputCount: Int)
+    extends Actor
+    with ActorLogging
+    with Pump {
   import FanIn._
 
   protected val primaryOutputs: Outputs = new SimpleOutputs(self, this)
@@ -292,4 +300,3 @@ import org.reactivestreams.{ Subscriber, Subscription }
   def receive = inputBunch.subreceive.orElse[Any, Unit](primaryOutputs.subreceive)
 
 }
-

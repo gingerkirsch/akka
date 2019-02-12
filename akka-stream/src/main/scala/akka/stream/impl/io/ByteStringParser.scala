@@ -10,7 +10,7 @@ import akka.stream.stage._
 import akka.util.ByteString
 
 import scala.annotation.tailrec
-import scala.util.control.{ NoStackTrace, NonFatal }
+import scala.util.control.{NoStackTrace, NonFatal}
 
 /**
  * INTERNAL API
@@ -98,9 +98,11 @@ import scala.util.control.{ NoStackTrace, NonFatal }
     @tailrec private def doParse(remainingRecursions: Int = recursionLimit): Unit =
       if (remainingRecursions == 0)
         failStage(
-          new IllegalStateException(s"Parsing logic didn't produce result after $recursionLimit steps. " +
+          new IllegalStateException(
+            s"Parsing logic didn't produce result after $recursionLimit steps. " +
             "Aborting processing to avoid infinite cycles. In the unlikely case that the parsing logic " +
-            "needs more recursion, override ParsingLogic.recursionLimit.")
+            "needs more recursion, override ParsingLogic.recursionLimit."
+          )
         )
       else {
         val recurse = doParseInner()
@@ -159,12 +161,10 @@ import scala.util.control.{ NoStackTrace, NonFatal }
    * @param acceptUpstreamFinish - if true - stream will complete when received `onUpstreamFinish`, if "false"
    *                             - onTruncation will be called
    */
-  case class ParseResult[+T](
-    result:               Option[T],
-    nextStep:             ParseStep[T],
-    acceptUpstreamFinish: Boolean      = true)
+  case class ParseResult[+T](result: Option[T], nextStep: ParseStep[T], acceptUpstreamFinish: Boolean = true)
 
   trait ParseStep[+T] {
+
     /**
      * Must return true when NeedMoreData will clean buffer. If returns false - next pulled
      * data will be appended to existing data in buffer

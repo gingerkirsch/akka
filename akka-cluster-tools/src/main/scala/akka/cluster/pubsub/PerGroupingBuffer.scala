@@ -5,7 +5,7 @@
 package akka.cluster.pubsub
 
 import akka.actor.ActorRef
-import akka.util.{ MessageBuffer, MessageBufferMap }
+import akka.util.{MessageBuffer, MessageBufferMap}
 
 private[pubsub] trait PerGroupingBuffer {
 

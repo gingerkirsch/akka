@@ -5,7 +5,7 @@
 package akka.persistence.query.javadsl
 
 import akka.NotUsed
-import akka.persistence.query.{ EventEnvelope, Offset }
+import akka.persistence.query.{EventEnvelope, Offset}
 import akka.stream.javadsl.Source
 
 /**

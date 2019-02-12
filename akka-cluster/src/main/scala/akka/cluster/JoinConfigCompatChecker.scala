@@ -7,12 +7,12 @@ package akka.cluster
 import java.util
 
 import akka.actor.ExtendedActorSystem
-import akka.annotation.{ DoNotInherit, InternalApi }
+import akka.annotation.{DoNotInherit, InternalApi}
 import akka.util.ccompat._
-import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 
 import scala.collection.JavaConverters._
-import scala.collection.{ immutable => im }
+import scala.collection.{immutable => im}
 
 abstract class JoinConfigCompatChecker {
 
@@ -73,9 +73,12 @@ object JoinConfigCompatChecker {
       // NOTE: we only check the key if effectively required
       // because config may contain more keys than required for this checker
       val incompatibleKeys =
-        toCheck.entrySet().asScala
+        toCheck
+          .entrySet()
+          .asScala
           .collect {
-            case entry if requiredKeys.contains(entry.getKey) && !checkCompat(entry) => s"${entry.getKey} is incompatible"
+            case entry if requiredKeys.contains(entry.getKey) && !checkCompat(entry) =>
+              s"${entry.getKey} is incompatible"
           }
 
       if (incompatibleKeys.isEmpty) Valid
@@ -97,7 +100,9 @@ object JoinConfigCompatChecker {
   private[cluster] def filterWithKeys(requiredKeys: im.Seq[String], config: Config): Config = {
 
     val filtered =
-      config.entrySet().asScala
+      config
+        .entrySet()
+        .asScala
         .collect {
           case e if requiredKeys.contains(e.getKey) => (e.getKey, e.getValue)
         }
@@ -111,7 +116,8 @@ object JoinConfigCompatChecker {
    * from the passed `requiredKeys` Seq.
    */
   @InternalApi
-  private[cluster] def removeSensitiveKeys(requiredKeys: im.Seq[String], clusterSettings: ClusterSettings): im.Seq[String] = {
+  private[cluster] def removeSensitiveKeys(requiredKeys: im.Seq[String],
+                                           clusterSettings: ClusterSettings): im.Seq[String] = {
     requiredKeys.filter { key =>
       !clusterSettings.SensitiveConfigPaths.exists(s => key.startsWith(s))
     }
@@ -174,6 +180,7 @@ sealed trait ConfigValidation {
 }
 
 case object Valid extends ConfigValidation {
+
   /**
    * Java API: get the singleton instance
    */

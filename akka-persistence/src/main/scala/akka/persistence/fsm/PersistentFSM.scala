@@ -8,7 +8,7 @@ import akka.actor._
 import akka.annotation.InternalApi
 import akka.persistence.fsm.PersistentFSM.FSMState
 import akka.persistence.serialization.Message
-import akka.persistence.{ PersistentActor, RecoveryCompleted, SnapshotOffer }
+import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import akka.util.JavaDurationConverters
 import com.typesafe.config.Config
 
@@ -44,8 +44,12 @@ private[akka] class SnapshotAfter(config: Config) extends Extension {
    * sequence number should trigger auto snapshot or not
    */
   val isSnapshotAfterSeqNo: Long => Boolean = snapshotAfterValue match {
-    case Some(snapShotAfterValue) => seqNo: Long => seqNo % snapShotAfterValue == 0
-    case None => seqNo: Long => false //always false, if snapshotAfter is not specified in config
+    case Some(snapShotAfterValue) =>
+      seqNo: Long =>
+        seqNo % snapShotAfterValue == 0
+    case None =>
+      seqNo: Long =>
+        false //always false, if snapshotAfter is not specified in config
   }
 }
 
@@ -119,9 +123,10 @@ trait PersistentFSM[S <: FSMState, D, E] extends PersistentActor with Persistent
    * Discover the latest recorded state
    */
   override def receiveRecover: Receive = {
-    case domainEventTag(event) => startWith(stateName, applyEvent(event, stateData))
+    case domainEventTag(event)                      => startWith(stateName, applyEvent(event, stateData))
     case StateChangeEvent(stateIdentifier, timeout) => startWith(statesMap(stateIdentifier), stateData, timeout)
-    case SnapshotOffer(_, PersistentFSMSnapshot(stateIdentifier, data: D, timeout)) => startWith(statesMap(stateIdentifier), data, timeout)
+    case SnapshotOffer(_, PersistentFSMSnapshot(stateIdentifier, data: D, timeout)) =>
+      startWith(statesMap(stateIdentifier), data, timeout)
     case RecoveryCompleted =>
       initialize()
       onRecoveryCompleted()
@@ -206,7 +211,10 @@ object PersistentFSM {
    * @tparam D state data type
    */
   @InternalApi
-  private[persistence] case class PersistentFSMSnapshot[D](stateIdentifier: String, data: D, timeout: Option[FiniteDuration]) extends Message
+  private[persistence] case class PersistentFSMSnapshot[D](stateIdentifier: String,
+                                                           data: D,
+                                                           timeout: Option[FiniteDuration])
+      extends Message
 
   /**
    * FSMState base trait, makes possible for simple default serialization by conversion to String
@@ -290,9 +298,9 @@ object PersistentFSM {
    * INTERNAL API
    */
   @InternalApi
-  private[persistence] final case class Timer(name: String, msg: Any, repeat: Boolean, generation: Int,
-                                              owner: AnyRef)(context: ActorContext)
-    extends NoSerializationVerificationNeeded {
+  private[persistence] final case class Timer(name: String, msg: Any, repeat: Boolean, generation: Int, owner: AnyRef)(
+      context: ActorContext
+  ) extends NoSerializationVerificationNeeded {
     private var ref: Option[Cancellable] = _
     private val scheduler = context.system.scheduler
     private implicit val executionContext = context.dispatcher
@@ -304,7 +312,8 @@ object PersistentFSM {
       }
       ref = Some(
         if (repeat) scheduler.schedule(timeout, timeout, actor, timerMsg)
-        else scheduler.scheduleOnce(timeout, actor, timerMsg))
+        else scheduler.scheduleOnce(timeout, actor, timerMsg)
+      )
     }
     def cancel(): Unit =
       if (ref.isDefined) {
@@ -333,20 +342,27 @@ object PersistentFSM {
    * accumulated while processing the last message, possibly domain event and handler
    * to be executed after FSM moves to the new state (also triggered when staying in the same state)
    */
-  final case class State[S, D, E](
-    stateName:         S,
-    stateData:         D,
-    timeout:           Option[FiniteDuration] = None,
-    stopReason:        Option[Reason]         = None,
-    replies:           List[Any]              = Nil,
-    domainEvents:      Seq[E]                 = Nil,
-    afterTransitionDo: D => Unit               = { _: D => })(private[akka] val notifies: Boolean = true) {
+  final case class State[S, D, E](stateName: S,
+                                  stateData: D,
+                                  timeout: Option[FiniteDuration] = None,
+                                  stopReason: Option[Reason] = None,
+                                  replies: List[Any] = Nil,
+                                  domainEvents: Seq[E] = Nil,
+                                  afterTransitionDo: D => Unit = { _: D =>
+                                    })(private[akka] val notifies: Boolean = true) {
 
     /**
      * Copy object and update values if needed.
      */
     @InternalApi
-    private[akka] def copy(stateName: S = stateName, stateData: D = stateData, timeout: Option[FiniteDuration] = timeout, stopReason: Option[Reason] = stopReason, replies: List[Any] = replies, notifies: Boolean = notifies, domainEvents: Seq[E] = domainEvents, afterTransitionDo: D => Unit = afterTransitionDo): State[S, D, E] = {
+    private[akka] def copy(stateName: S = stateName,
+                           stateData: D = stateData,
+                           timeout: Option[FiniteDuration] = timeout,
+                           stopReason: Option[Reason] = stopReason,
+                           replies: List[Any] = replies,
+                           notifies: Boolean = notifies,
+                           domainEvents: Seq[E] = domainEvents,
+                           afterTransitionDo: D => Unit = afterTransitionDo): State[S, D, E] = {
       State(stateName, stateData, timeout, stopReason, replies, domainEvents, afterTransitionDo)(notifies)
     }
 
@@ -385,7 +401,10 @@ object PersistentFSM {
 
     @InternalApi
     @Deprecated
-    @deprecated("Internal API easily to be confused with regular FSM's using. Use regular events (`applying`). Internally, `copy` can be used instead.", "2.5.5")
+    @deprecated(
+      "Internal API easily to be confused with regular FSM's using. Use regular events (`applying`). Internally, `copy` can be used instead.",
+      "2.5.5"
+    )
     private[akka] def using(@deprecatedName('nextStateDate) nextStateData: D): State[S, D, E] = {
       copy(stateData = nextStateData)
     }
@@ -428,7 +447,8 @@ object PersistentFSM {
    * Case class representing the state of the [[akka.actor.FSM]] whithin the
    * `onTermination` block.
    */
-  final case class StopEvent[S, D](reason: Reason, currentState: S, stateData: D) extends NoSerializationVerificationNeeded
+  final case class StopEvent[S, D](reason: Reason, currentState: S, stateData: D)
+      extends NoSerializationVerificationNeeded
 
 }
 
@@ -438,7 +458,9 @@ object PersistentFSM {
  * Persistent Finite State Machine actor abstract base class.
  *
  */
-abstract class AbstractPersistentFSM[S <: FSMState, D, E] extends AbstractPersistentFSMBase[S, D, E] with PersistentFSM[S, D, E] {
+abstract class AbstractPersistentFSM[S <: FSMState, D, E]
+    extends AbstractPersistentFSMBase[S, D, E]
+    with PersistentFSM[S, D, E] {
   import java.util.function.Consumer
 
   /**
@@ -470,6 +492,6 @@ abstract class AbstractPersistentFSM[S <: FSMState, D, E] extends AbstractPersis
  *
  */
 abstract class AbstractPersistentLoggingFSM[S <: FSMState, D, E]
-  extends AbstractPersistentFSM[S, D, E]
-  with LoggingPersistentFSM[S, D, E]
-  with PersistentFSM[S, D, E]
+    extends AbstractPersistentFSM[S, D, E]
+    with LoggingPersistentFSM[S, D, E]
+    with PersistentFSM[S, D, E]

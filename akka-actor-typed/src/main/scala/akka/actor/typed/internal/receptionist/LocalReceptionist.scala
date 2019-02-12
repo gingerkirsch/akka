@@ -4,11 +4,11 @@
 
 package akka.actor.typed.internal.receptionist
 
-import akka.actor.typed.{ ActorRef, Behavior, Terminated }
+import akka.actor.typed.{ActorRef, Behavior, Terminated}
 import akka.actor.typed.receptionist.Receptionist._
 import akka.actor.typed.receptionist.ServiceKey
-import akka.actor.typed.scaladsl.{ ActorContext, Behaviors }
-import akka.actor.typed.scaladsl.Behaviors.{ receive, same }
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
+import akka.actor.typed.scaladsl.Behaviors.{receive, same}
 import akka.annotation.InternalApi
 import akka.util.TypedMultiMap
 
@@ -38,7 +38,8 @@ private[akka] object LocalReceptionist extends ReceptionistBehaviorProvider {
 
   sealed trait InternalCommand
   final case class RegisteredActorTerminated[T](key: ServiceKey[T], ref: ActorRef[T]) extends InternalCommand
-  final case class SubscriberTerminated[T](key: ServiceKey[T], ref: ActorRef[ReceptionistMessages.Listing[T]]) extends InternalCommand
+  final case class SubscriberTerminated[T](key: ServiceKey[T], ref: ActorRef[ReceptionistMessages.Listing[T]])
+      extends InternalCommand
 
   override def behavior: Behavior[Command] = Behaviors.setup { ctx =>
     ctx.setLoggerClass(classOf[LocalReceptionist])
@@ -48,12 +49,11 @@ private[akka] object LocalReceptionist extends ReceptionistBehaviorProvider {
     ).narrow[Command]
   }
 
-  private def behavior(
-    serviceRegistry: LocalServiceRegistry,
-    subscriptions:   SubscriptionRegistry): Behavior[Any] = {
+  private def behavior(serviceRegistry: LocalServiceRegistry, subscriptions: SubscriptionRegistry): Behavior[Any] = {
 
     // Helper to create new state
-    def next(newRegistry: LocalServiceRegistry = serviceRegistry, newSubscriptions: SubscriptionRegistry = subscriptions) =
+    def next(newRegistry: LocalServiceRegistry = serviceRegistry,
+             newSubscriptions: SubscriptionRegistry = subscriptions) =
       behavior(newRegistry, newSubscriptions)
 
     /*
@@ -71,7 +71,8 @@ private[akka] object LocalReceptionist extends ReceptionistBehaviorProvider {
       })
 
     // Helper that makes sure that subscribers are notified when an entry is changed
-    def updateRegistry(changedKeysHint: Set[AbstractServiceKey], f: LocalServiceRegistry => LocalServiceRegistry): Behavior[Any] = {
+    def updateRegistry(changedKeysHint: Set[AbstractServiceKey],
+                       f: LocalServiceRegistry => LocalServiceRegistry): Behavior[Any] = {
       val newRegistry = f(serviceRegistry)
 
       def notifySubscribersFor[T](key: AbstractServiceKey): Unit = {
@@ -79,12 +80,12 @@ private[akka] object LocalReceptionist extends ReceptionistBehaviorProvider {
         subscriptions.get(key).foreach(_ ! ReceptionistMessages.Listing(key.asServiceKey, newListing))
       }
 
-      changedKeysHint foreach notifySubscribersFor
+      changedKeysHint.foreach(notifySubscribersFor)
       next(newRegistry = newRegistry)
     }
 
     def replyWithListing[T](key: ServiceKey[T], replyTo: ActorRef[Listing]): Unit =
-      replyTo ! ReceptionistMessages.Listing(key, serviceRegistry get key)
+      replyTo ! ReceptionistMessages.Listing(key, serviceRegistry.get(key))
 
     def onCommand(ctx: ActorContext[Any], cmd: Command): Behavior[Any] = cmd match {
       case ReceptionistMessages.Register(key, serviceInstance, maybeReplyTo) =>

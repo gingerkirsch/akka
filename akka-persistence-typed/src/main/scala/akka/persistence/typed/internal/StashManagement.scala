@@ -15,7 +15,7 @@ import akka.persistence.DiscardToDeadLetterStrategy
 import akka.persistence.ReplyToStrategy
 import akka.persistence.ThrowOverflowExceptionStrategy
 import akka.util.ConstantFun
-import akka.{ actor => untyped }
+import akka.{actor => untyped}
 
 /** INTERNAL API: Stash management for persistent behaviors */
 @InternalApi
@@ -45,7 +45,8 @@ private[akka] trait StashManagement[C, E, S] {
   private def stash(msg: InternalProtocol, buffer: StashBuffer[InternalProtocol]): Unit = {
     logStashMessage(msg, buffer)
 
-    try buffer.stash(msg) catch {
+    try buffer.stash(msg)
+    catch {
       case e: StashOverflowException =>
         setup.stashOverflowStrategy match {
           case DiscardToDeadLetterStrategy =>
@@ -53,7 +54,9 @@ private[akka] trait StashManagement[C, E, S] {
             context.system.deadLetters.tell(DeadLetter(msg, noSenderBecauseAkkaTyped, context.self.toUntyped))
 
           case ReplyToStrategy(_) =>
-            throw new RuntimeException("ReplyToStrategy does not make sense at all in Akka Typed, since there is no sender()!")
+            throw new RuntimeException(
+              "ReplyToStrategy does not make sense at all in Akka Typed, since there is no sender()!"
+            )
 
           case ThrowOverflowExceptionStrategy =>
             throw e
@@ -98,21 +101,24 @@ private[akka] trait StashManagement[C, E, S] {
     stashState.isUnstashAllInProgress
 
   private def logStashMessage(msg: InternalProtocol, buffer: StashBuffer[InternalProtocol]): Unit = {
-    if (setup.settings.logOnStashing) setup.log.debug(
-      "Stashing message to {} stash: [{}] ",
-      if (buffer eq stashState.internalStashBuffer) "internal" else "user", msg)
+    if (setup.settings.logOnStashing)
+      setup.log.debug("Stashing message to {} stash: [{}] ",
+                      if (buffer eq stashState.internalStashBuffer) "internal" else "user",
+                      msg)
   }
 
   private def logUnstashMessage(buffer: StashBuffer[InternalProtocol]): Unit = {
-    if (setup.settings.logOnStashing) setup.log.debug(
-      "Unstashing message from {} stash: [{}]",
-      if (buffer eq stashState.internalStashBuffer) "internal" else "user", buffer.head)
+    if (setup.settings.logOnStashing)
+      setup.log.debug("Unstashing message from {} stash: [{}]",
+                      if (buffer eq stashState.internalStashBuffer) "internal" else "user",
+                      buffer.head)
   }
 
   private def logUnstashAll(): Unit = {
-    if (setup.settings.logOnStashing) setup.log.debug(
-      "Unstashing all [{}] messages from user stash, first is: [{}]",
-      stashState.userStashBuffer.size, stashState.userStashBuffer.head)
+    if (setup.settings.logOnStashing)
+      setup.log.debug("Unstashing all [{}] messages from user stash, first is: [{}]",
+                      stashState.userStashBuffer.size,
+                      stashState.userStashBuffer.head)
   }
 
 }

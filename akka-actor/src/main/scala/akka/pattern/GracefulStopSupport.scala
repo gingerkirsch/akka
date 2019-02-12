@@ -5,12 +5,13 @@
 package akka.pattern
 
 import akka.actor._
-import akka.util.{ Timeout }
-import akka.dispatch.sysmsg.{ Unwatch, Watch }
+import akka.util.{Timeout}
+import akka.dispatch.sysmsg.{Unwatch, Watch}
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 trait GracefulStopSupport {
+
   /**
    * Returns a [[scala.concurrent.Future]] that will be completed with success (value `true`) when
    * existing messages of the target actor has been processed and the actor has been
@@ -53,6 +54,7 @@ trait GracefulStopSupport {
         case Terminated(t) if t.path == target.path => true
         case _                                      => { internalTarget.sendSystemMessage(Unwatch(target, ref)); false }
       },
-      t => { internalTarget.sendSystemMessage(Unwatch(target, ref)); t })(ref.internalCallingThreadExecutionContext)
+      t => { internalTarget.sendSystemMessage(Unwatch(target, ref)); t }
+    )(ref.internalCallingThreadExecutionContext)
   }
 }

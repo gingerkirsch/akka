@@ -4,7 +4,7 @@
 
 package akka.stream
 
-import java.util.concurrent.{ Semaphore, TimeUnit }
+import java.util.concurrent.{Semaphore, TimeUnit}
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl._
@@ -25,14 +25,16 @@ import scala.util.Success
 @BenchmarkMode(Array(Mode.Throughput))
 class SourceRefBenchmark {
 
-  val config = ConfigFactory.parseString(
-    """
+  val config = ConfigFactory
+    .parseString(
+      """
       akka {
         log-config-on-start = off
         log-dead-letters-during-shutdown = off
         loglevel = "WARNING"
       }""".stripMargin
-  ).withFallback(ConfigFactory.load())
+    )
+    .withFallback(ConfigFactory.load())
 
   implicit val system = ActorSystem("test", config)
 

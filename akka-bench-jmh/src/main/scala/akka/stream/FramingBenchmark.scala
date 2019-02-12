@@ -4,13 +4,13 @@
 
 package akka.stream
 
-import java.util.concurrent.{ Semaphore, TimeUnit }
+import java.util.concurrent.{Semaphore, TimeUnit}
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{ Framing, Sink, Source }
+import akka.stream.scaladsl.{Framing, Sink, Source}
 import akka.util.ByteString
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.openjdk.jmh.annotations._
 
 import scala.concurrent.Await
@@ -22,8 +22,9 @@ import scala.util.Random
 @BenchmarkMode(Array(Mode.Throughput))
 class FramingBenchmark {
 
-  val config: Config = ConfigFactory.parseString(
-    """
+  val config: Config = ConfigFactory
+    .parseString(
+      """
       akka {
         log-config-on-start = off
         log-dead-letters-during-shutdown = off
@@ -46,7 +47,8 @@ class FramingBenchmark {
           }
         }
       }""".stripMargin
-  ).withFallback(ConfigFactory.load())
+    )
+    .withFallback(ConfigFactory.load())
 
   implicit val system: ActorSystem = ActorSystem("test", config)
 
@@ -66,7 +68,9 @@ class FramingBenchmark {
     materializer = ActorMaterializer()
 
     val frame = List.range(0, messageSize, 1).map(_ => Random.nextPrintableChar()).mkString + "\n"
-    flow = Source.repeat(ByteString(List.range(0, framePerSeq, 1).map(_ => frame).mkString)).take(100000)
+    flow = Source
+      .repeat(ByteString(List.range(0, framePerSeq, 1).map(_ => frame).mkString))
+      .take(100000)
       .via(Framing.delimiter(ByteString("\n"), Int.MaxValue))
   }
 

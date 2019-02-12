@@ -55,7 +55,7 @@ import akka.stream.SharedKillSwitch
 import akka.stream.scaladsl.Flow
 import akka.stream.scaladsl.Keep
 import akka.stream.scaladsl.Sink
-import akka.util.{ OptionVal, WildcardIndex, unused }
+import akka.util.{unused, OptionVal, WildcardIndex}
 
 /**
  * INTERNAL API
@@ -63,6 +63,7 @@ import akka.util.{ OptionVal, WildcardIndex, unused }
  * Separate trait to facilitate testing without real transport.
  */
 private[remote] trait InboundContext {
+
   /**
    * The local inbound address.
    */
@@ -102,7 +103,8 @@ private[remote] object AssociationState {
       uniqueRemoteAddressPromise = Promise(),
       lastUsedTimestamp = new AtomicLong(System.nanoTime()),
       controlIdleKillSwitch = OptionVal.None,
-      quarantined = ImmutableLongMap.empty[QuarantinedTimestamp])
+      quarantined = ImmutableLongMap.empty[QuarantinedTimestamp]
+    )
 
   final case class QuarantinedTimestamp(nanoTime: Long) {
     override def toString: String =
@@ -113,12 +115,11 @@ private[remote] object AssociationState {
 /**
  * INTERNAL API
  */
-private[remote] final class AssociationState(
-  val incarnation:                Int,
-  val uniqueRemoteAddressPromise: Promise[UniqueAddress],
-  val lastUsedTimestamp:          AtomicLong, // System.nanoTime timestamp
-  val controlIdleKillSwitch:      OptionVal[SharedKillSwitch],
-  val quarantined:                ImmutableLongMap[AssociationState.QuarantinedTimestamp]) {
+private[remote] final class AssociationState(val incarnation: Int,
+                                             val uniqueRemoteAddressPromise: Promise[UniqueAddress],
+                                             val lastUsedTimestamp: AtomicLong, // System.nanoTime timestamp
+                                             val controlIdleKillSwitch: OptionVal[SharedKillSwitch],
+                                             val quarantined: ImmutableLongMap[AssociationState.QuarantinedTimestamp]) {
 
   import AssociationState.QuarantinedTimestamp
 
@@ -145,8 +146,11 @@ private[remote] final class AssociationState(
   }
 
   def newIncarnation(remoteAddressPromise: Promise[UniqueAddress]): AssociationState =
-    new AssociationState(incarnation + 1, remoteAddressPromise,
-      lastUsedTimestamp = new AtomicLong(System.nanoTime()), controlIdleKillSwitch, quarantined)
+    new AssociationState(incarnation + 1,
+                         remoteAddressPromise,
+                         lastUsedTimestamp = new AtomicLong(System.nanoTime()),
+                         controlIdleKillSwitch,
+                         quarantined)
 
   def newQuarantined(): AssociationState =
     uniqueRemoteAddressPromise.future.value match {
@@ -156,7 +160,8 @@ private[remote] final class AssociationState(
           uniqueRemoteAddressPromise,
           lastUsedTimestamp = new AtomicLong(System.nanoTime()),
           controlIdleKillSwitch,
-          quarantined = quarantined.updated(a.uid, QuarantinedTimestamp(System.nanoTime())))
+          quarantined = quarantined.updated(a.uid, QuarantinedTimestamp(System.nanoTime()))
+        )
       case _ => this
     }
 
@@ -170,8 +175,11 @@ private[remote] final class AssociationState(
   def isQuarantined(uid: Long): Boolean = quarantined.contains(uid)
 
   def withControlIdleKillSwitch(killSwitch: OptionVal[SharedKillSwitch]): AssociationState =
-    new AssociationState(incarnation, uniqueRemoteAddressPromise, lastUsedTimestamp,
-      controlIdleKillSwitch = killSwitch, quarantined)
+    new AssociationState(incarnation,
+                         uniqueRemoteAddressPromise,
+                         lastUsedTimestamp,
+                         controlIdleKillSwitch = killSwitch,
+                         quarantined)
 
   override def toString(): String = {
     val a = uniqueRemoteAddressPromise.future.value match {
@@ -190,6 +198,7 @@ private[remote] final class AssociationState(
  * Separate trait to facilitate testing without real transport.
  */
 private[remote] trait OutboundContext {
+
   /**
    * The local inbound address.
    */
@@ -229,8 +238,10 @@ private[remote] trait OutboundContext {
  * INTERNAL API
  */
 private[remote] object FlushOnShutdown {
-  def props(done: Promise[Done], timeout: FiniteDuration,
-            inboundContext: InboundContext, associations: Set[Association]): Props = {
+  def props(done: Promise[Done],
+            timeout: FiniteDuration,
+            inboundContext: InboundContext,
+            associations: Set[Association]): Props = {
     require(associations.nonEmpty)
     Props(new FlushOnShutdown(done, timeout, inboundContext, associations))
   }
@@ -241,11 +252,11 @@ private[remote] object FlushOnShutdown {
 /**
  * INTERNAL API
  */
-private[remote] class FlushOnShutdown(
-  done:                   Promise[Done],
-  timeout:                FiniteDuration,
-  @unused inboundContext: InboundContext,
-  associations:           Set[Association]) extends Actor {
+private[remote] class FlushOnShutdown(done: Promise[Done],
+                                      timeout: FiniteDuration,
+                                      @unused inboundContext: InboundContext,
+                                      associations: Set[Association])
+    extends Actor {
 
   var remaining = Map.empty[UniqueAddress, Int]
 
@@ -298,7 +309,8 @@ private[remote] class FlushOnShutdown(
  * INTERNAL API
  */
 private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _provider: RemoteActorRefProvider)
-  extends RemoteTransport(_system, _provider) with InboundContext {
+    extends RemoteTransport(_system, _provider)
+    with InboundContext {
   import ArteryTransport._
   import FlightRecorderEvents._
 
@@ -334,6 +346,7 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
   }
 
   @volatile private[this] var _inboundCompressionAccess: OptionVal[InboundCompressionAccess] = OptionVal.None
+
   /** Only access compression tables via the CompressionAccess */
   def inboundCompressionAccess: OptionVal[InboundCompressionAccess] = _inboundCompressionAccess
   protected def setInboundCompressionAccess(a: InboundCompressionAccess): Unit =
@@ -356,22 +369,24 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
   protected val inboundLanes = settings.Advanced.InboundLanes
 
   val largeMessageChannelEnabled: Boolean =
-    !settings.LargeMessageDestinations.wildcardTree.isEmpty ||
-      !settings.LargeMessageDestinations.doubleWildcardTree.isEmpty
+  !settings.LargeMessageDestinations.wildcardTree.isEmpty ||
+  !settings.LargeMessageDestinations.doubleWildcardTree.isEmpty
 
   private val priorityMessageDestinations =
     WildcardIndex[NotUsed]()
-      // These destinations are not defined in configuration because it should not
-      // be possible to abuse the control channel
+    // These destinations are not defined in configuration because it should not
+    // be possible to abuse the control channel
       .insert(Array("system", "remote-watcher"), NotUsed)
       // these belongs to cluster and should come from there
       .insert(Array("system", "cluster", "core", "daemon", "heartbeatSender"), NotUsed)
       .insert(Array("system", "cluster", "core", "daemon", "crossDcHeartbeatSender"), NotUsed)
       .insert(Array("system", "cluster", "heartbeatReceiver"), NotUsed)
 
-  private val restartCounter = new RestartCounter(settings.Advanced.InboundMaxRestarts, settings.Advanced.InboundRestartTimeout)
+  private val restartCounter =
+    new RestartCounter(settings.Advanced.InboundMaxRestarts, settings.Advanced.InboundRestartTimeout)
 
-  protected val envelopeBufferPool = new EnvelopeBufferPool(settings.Advanced.MaximumFrameSize, settings.Advanced.BufferPoolSize)
+  protected val envelopeBufferPool =
+    new EnvelopeBufferPool(settings.Advanced.MaximumFrameSize, settings.Advanced.BufferPoolSize)
   protected val largeEnvelopeBufferPool =
     if (largeMessageChannelEnabled)
       new EnvelopeBufferPool(settings.Advanced.MaximumLargeFrameSize, settings.Advanced.LargeBufferPoolSize)
@@ -380,8 +395,10 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
 
   private val inboundEnvelopePool = ReusableInboundEnvelope.createObjectPool(capacity = 16)
   // The outboundEnvelopePool is shared among all outbound associations
-  private val outboundEnvelopePool = ReusableOutboundEnvelope.createObjectPool(capacity =
-    settings.Advanced.OutboundMessageQueueSize * settings.Advanced.OutboundLanes * 3)
+  private val outboundEnvelopePool = ReusableOutboundEnvelope.createObjectPool(
+    capacity =
+    settings.Advanced.OutboundMessageQueueSize * settings.Advanced.OutboundLanes * 3
+  )
 
   /**
    * Thread-safe flight recorder for top level events.
@@ -401,15 +418,16 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
   }
 
   private val associationRegistry = new AssociationRegistry(
-    remoteAddress => new Association(
-      this,
-      materializer,
-      controlMaterializer,
-      remoteAddress,
-      controlSubject,
-      settings.LargeMessageDestinations,
-      priorityMessageDestinations,
-      outboundEnvelopePool))
+    remoteAddress =>
+      new Association(this,
+                      materializer,
+                      controlMaterializer,
+                      remoteAddress,
+                      controlSubject,
+                      settings.LargeMessageDestinations,
+                      priorityMessageDestinations,
+                      outboundEnvelopePool)
+  )
 
   def remoteAddresses: Set[Address] = associationRegistry.allAssociations.map(_.remoteAddress)
 
@@ -434,22 +452,19 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
       else ArteryTransport.autoSelectPort(settings.Bind.Hostname, udp)
     } else settings.Bind.Port
 
-    _localAddress = UniqueAddress(
-      Address(ArteryTransport.ProtocolName, system.name, settings.Canonical.Hostname, port),
-      AddressUidExtension(system).longAddressUid)
+    _localAddress = UniqueAddress(Address(ArteryTransport.ProtocolName, system.name, settings.Canonical.Hostname, port),
+                                  AddressUidExtension(system).longAddressUid)
     _addresses = Set(_localAddress.address)
 
-    _bindAddress = UniqueAddress(
-      Address(ArteryTransport.ProtocolName, system.name, settings.Bind.Hostname, bindPort),
-      AddressUidExtension(system).longAddressUid)
+    _bindAddress = UniqueAddress(Address(ArteryTransport.ProtocolName, system.name, settings.Bind.Hostname, bindPort),
+                                 AddressUidExtension(system).longAddressUid)
 
     // TODO: This probably needs to be a global value instead of an event as events might rotate out of the log
     topLevelFlightRecorder.loFreq(Transport_UniqueAddressSet, _localAddress.toString())
 
     materializer = ActorMaterializer.systemMaterializer(settings.Advanced.MaterializerSettings, "remote", system)
-    controlMaterializer = ActorMaterializer.systemMaterializer(
-      settings.Advanced.MaterializerSettings,
-      "remoteControl", system)
+    controlMaterializer =
+      ActorMaterializer.systemMaterializer(settings.Advanced.MaterializerSettings, "remoteControl", system)
 
     messageDispatcher = new MessageDispatcher(system, provider)
     topLevelFlightRecorder.loFreq(Transport_MaterializerStarted, NoMetaData)
@@ -459,9 +474,10 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
 
     startRemoveQuarantinedAssociationTask()
 
-    log.info(
-      "Remoting started with transport [Artery {}]; listening on address [{}] with UID [{}]",
-      settings.Transport, localAddress.address, localAddress.uid)
+    log.info("Remoting started with transport [Artery {}]; listening on address [{}] with UID [{}]",
+             settings.Transport,
+             localAddress.address,
+             localAddress.uid)
   }
 
   protected def startTransport(): Unit
@@ -501,9 +517,9 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
         // totalTimeout will be 0 when no tasks registered, so at least 3.seconds
         val totalTimeout = coord.totalTimeout().max(3.seconds)
         if (!coord.jvmHooksLatch.await(totalTimeout.toMillis, TimeUnit.MILLISECONDS))
-          log.warning(
-            "CoordinatedShutdown took longer than [{}]. Shutting down [{}] via shutdownHook",
-            totalTimeout, localAddress)
+          log.warning("CoordinatedShutdown took longer than [{}]. Shutting down [{}] via shutdownHook",
+                      totalTimeout,
+                      localAddress)
         else
           log.debug("Shutting down [{}] via shutdownHook", localAddress)
         if (hasBeenShutdown.compareAndSet(false, true)) {
@@ -537,14 +553,22 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
                   } else
                     log.debug(
                       "Discarding incoming ActorRef compression advertisement from [{}] that was " +
-                        "prepared for another incarnation with uid [{}] than current uid [{}], table: [{}]",
-                      from, table.originUid, localAddress.uid, table)
+                      "prepared for another incarnation with uid [{}] than current uid [{}], table: [{}]",
+                      from,
+                      table.originUid,
+                      localAddress.uid,
+                      table
+                    )
                 case ack: ActorRefCompressionAdvertisementAck =>
                   inboundCompressionAccess match {
                     case OptionVal.Some(access) => access.confirmActorRefCompressionAdvertisementAck(ack)
                     case _ =>
-                      log.debug(s"Received {} version: [{}] however no inbound compression access was present. " +
-                        s"ACK will not take effect, however it will be redelivered and likely to apply then.", Logging.simpleName(ack), ack.tableVersion)
+                      log.debug(
+                        s"Received {} version: [{}] however no inbound compression access was present. " +
+                        s"ACK will not take effect, however it will be redelivered and likely to apply then.",
+                        Logging.simpleName(ack),
+                        ack.tableVersion
+                      )
                   }
 
                 case ClassManifestCompressionAdvertisement(from, table) =>
@@ -562,14 +586,22 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
                   } else
                     log.debug(
                       "Discarding incoming Class Manifest compression advertisement from [{}] that was " +
-                        "prepared for another incarnation with uid [{}] than current uid [{}], table: [{}]",
-                      from, table.originUid, localAddress.uid, table)
+                      "prepared for another incarnation with uid [{}] than current uid [{}], table: [{}]",
+                      from,
+                      table.originUid,
+                      localAddress.uid,
+                      table
+                    )
                 case ack: ClassManifestCompressionAdvertisementAck =>
                   inboundCompressionAccess match {
                     case OptionVal.Some(access) => access.confirmClassManifestCompressionAdvertisementAck(ack)
                     case _ =>
-                      log.debug(s"Received {} version: [{}] however no inbound compression access was present. " +
-                        s"ACK will not take effect, however it will be redelivered and likely to apply then.", Logging.simpleName(ack), ack.tableVersion)
+                      log.debug(
+                        s"Received {} version: [{}] however no inbound compression access was present. " +
+                        s"ACK will not take effect, however it will be redelivered and likely to apply then.",
+                        Logging.simpleName(ack),
+                        ack.tableVersion
+                      )
                   }
               }
 
@@ -593,11 +625,13 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
 
   }
 
-  protected def attachInboundStreamRestart(streamName: String, streamCompleted: Future[Done], restart: () => Unit): Unit = {
+  protected def attachInboundStreamRestart(streamName: String,
+                                           streamCompleted: Future[Done],
+                                           restart: () => Unit): Unit = {
     implicit val ec = materializer.executionContext
     streamCompleted.failed.foreach {
-      case ShutdownSignal     => // shutdown as expected
-      case _: AeronTerminated => // shutdown already in progress
+      case ShutdownSignal      => // shutdown as expected
+      case _: AeronTerminated  => // shutdown already in progress
       case cause if isShutdown =>
         // don't restart after shutdown, but log some details so we notice
         log.error(cause, s"{} failed after shutdown. {}", streamName, cause.getMessage)
@@ -608,8 +642,14 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
           topLevelFlightRecorder.loFreq(Transport_RestartInbound, s"$localAddress - $streamName")
           restart()
         } else {
-          log.error(cause, "{} failed and restarted {} times within {} seconds. Terminating system. {}",
-            streamName, settings.Advanced.InboundMaxRestarts, settings.Advanced.InboundRestartTimeout.toSeconds, cause.getMessage)
+          log.error(
+            cause,
+            "{} failed and restarted {} times within {} seconds. Terminating system. {}",
+            streamName,
+            settings.Advanced.InboundMaxRestarts,
+            settings.Advanced.InboundRestartTimeout.toSeconds,
+            cause.getMessage
+          )
           system.terminate()
         }
     }
@@ -625,8 +665,10 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
         if (allAssociations.isEmpty) Future.successful(Done)
         else {
           val flushingPromise = Promise[Done]()
-          system.systemActorOf(FlushOnShutdown.props(flushingPromise, settings.Advanced.ShutdownFlushTimeout,
-            this, allAssociations), "remoteFlushOnShutdown")
+          system.systemActorOf(
+            FlushOnShutdown.props(flushingPromise, settings.Advanced.ShutdownFlushTimeout, this, allAssociations),
+            "remoteFlushOnShutdown"
+          )
           flushingPromise.future
         }
       implicit val ec = system.dispatcher
@@ -642,7 +684,7 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
     killSwitch.abort(ShutdownSignal)
     topLevelFlightRecorder.loFreq(Transport_KillSwitchPulled, NoMetaData)
     for {
-      _ <- streamsCompleted.recover { case _ => Done }
+      _ <- streamsCompleted.recover { case _    => Done }
       _ <- shutdownTransport().recover { case _ => Done }
     } yield {
       // no need to explicitly shut down the contained access since it's lifecycle is bound to the Decoder
@@ -755,8 +797,11 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
   def outbound(outboundContext: OutboundContext): Sink[OutboundEnvelope, (OutboundCompressionAccess, Future[Done])] =
     createOutboundSink(OrdinaryStreamId, outboundContext, envelopeBufferPool)
 
-  private def createOutboundSink(streamId: Int, outboundContext: OutboundContext,
-                                 bufferPool: EnvelopeBufferPool): Sink[OutboundEnvelope, (OutboundCompressionAccess, Future[Done])] = {
+  private def createOutboundSink(
+      streamId: Int,
+      outboundContext: OutboundContext,
+      bufferPool: EnvelopeBufferPool
+  ): Sink[OutboundEnvelope, (OutboundCompressionAccess, Future[Done])] = {
 
     outboundLane(outboundContext, bufferPool, streamId)
       .toMat(outboundTransportSink(outboundContext, streamId, bufferPool))(Keep.both)
@@ -765,30 +810,59 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
   def outboundTransportSink(outboundContext: OutboundContext): Sink[EnvelopeBuffer, Future[Done]] =
     outboundTransportSink(outboundContext, OrdinaryStreamId, envelopeBufferPool)
 
-  protected def outboundTransportSink(outboundContext: OutboundContext, streamId: Int,
+  protected def outboundTransportSink(outboundContext: OutboundContext,
+                                      streamId: Int,
                                       bufferPool: EnvelopeBufferPool): Sink[EnvelopeBuffer, Future[Done]]
 
-  def outboundLane(outboundContext: OutboundContext): Flow[OutboundEnvelope, EnvelopeBuffer, OutboundCompressionAccess] =
+  def outboundLane(
+      outboundContext: OutboundContext
+  ): Flow[OutboundEnvelope, EnvelopeBuffer, OutboundCompressionAccess] =
     outboundLane(outboundContext, envelopeBufferPool, OrdinaryStreamId)
 
-  private def outboundLane(
-    outboundContext: OutboundContext,
-    bufferPool:      EnvelopeBufferPool, streamId: Int): Flow[OutboundEnvelope, EnvelopeBuffer, OutboundCompressionAccess] = {
+  private def outboundLane(outboundContext: OutboundContext,
+                           bufferPool: EnvelopeBufferPool,
+                           streamId: Int): Flow[OutboundEnvelope, EnvelopeBuffer, OutboundCompressionAccess] = {
 
-    Flow.fromGraph(killSwitch.flow[OutboundEnvelope])
-      .via(new OutboundHandshake(system, outboundContext, outboundEnvelopePool, settings.Advanced.HandshakeTimeout,
-        settings.Advanced.HandshakeRetryInterval, settings.Advanced.InjectHandshakeInterval, Duration.Undefined))
+    Flow
+      .fromGraph(killSwitch.flow[OutboundEnvelope])
+      .via(
+        new OutboundHandshake(
+          system,
+          outboundContext,
+          outboundEnvelopePool,
+          settings.Advanced.HandshakeTimeout,
+          settings.Advanced.HandshakeRetryInterval,
+          settings.Advanced.InjectHandshakeInterval,
+          Duration.Undefined
+        )
+      )
       .viaMat(createEncoder(bufferPool, streamId))(Keep.right)
   }
 
-  def outboundControl(outboundContext: OutboundContext): Sink[OutboundEnvelope, (OutboundControlIngress, Future[Done])] = {
+  def outboundControl(
+      outboundContext: OutboundContext
+  ): Sink[OutboundEnvelope, (OutboundControlIngress, Future[Done])] = {
     val livenessProbeInterval = (settings.Advanced.QuarantineIdleOutboundAfter / 10)
       .max(settings.Advanced.HandshakeRetryInterval)
-    Flow.fromGraph(killSwitch.flow[OutboundEnvelope])
-      .via(new OutboundHandshake(system, outboundContext, outboundEnvelopePool, settings.Advanced.HandshakeTimeout,
-        settings.Advanced.HandshakeRetryInterval, settings.Advanced.InjectHandshakeInterval, livenessProbeInterval))
-      .via(new SystemMessageDelivery(outboundContext, system.deadLetters, settings.Advanced.SystemMessageResendInterval,
-        settings.Advanced.SysMsgBufferSize))
+    Flow
+      .fromGraph(killSwitch.flow[OutboundEnvelope])
+      .via(
+        new OutboundHandshake(
+          system,
+          outboundContext,
+          outboundEnvelopePool,
+          settings.Advanced.HandshakeTimeout,
+          settings.Advanced.HandshakeRetryInterval,
+          settings.Advanced.InjectHandshakeInterval,
+          livenessProbeInterval
+        )
+      )
+      .via(
+        new SystemMessageDelivery(outboundContext,
+                                  system.deadLetters,
+                                  settings.Advanced.SystemMessageResendInterval,
+                                  settings.Advanced.SysMsgBufferSize)
+      )
       // note that System messages must not be dropped before the SystemMessageDelivery stage
       .via(outboundTestFlow(outboundContext))
       .viaMat(new OutboundControlJunction(outboundContext, outboundEnvelopePool))(Keep.right)
@@ -798,11 +872,16 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
     // TODO we can also add scrubbing stage that would collapse sys msg acks/nacks and remove duplicate Quarantine messages
   }
 
-  def createEncoder(pool: EnvelopeBufferPool, streamId: Int): Flow[OutboundEnvelope, EnvelopeBuffer, OutboundCompressionAccess] =
-    Flow.fromGraph(new Encoder(localAddress, system, outboundEnvelopePool, pool, streamId, settings.LogSend,
-      settings.Version))
+  def createEncoder(pool: EnvelopeBufferPool,
+                    streamId: Int): Flow[OutboundEnvelope, EnvelopeBuffer, OutboundCompressionAccess] =
+    Flow.fromGraph(
+      new Encoder(localAddress, system, outboundEnvelopePool, pool, streamId, settings.LogSend, settings.Version)
+    )
 
-  def createDecoder(settings: ArterySettings, compressions: InboundCompressions): Flow[EnvelopeBuffer, InboundEnvelope, InboundCompressionAccess] =
+  def createDecoder(
+      settings: ArterySettings,
+      compressions: InboundCompressions
+  ): Flow[EnvelopeBuffer, InboundEnvelope, InboundCompressionAccess] =
     Flow.fromGraph(new Decoder(this, system, localAddress, settings, compressions, inboundEnvelopePool))
 
   def createDeserializer(bufferPool: EnvelopeBufferPool): Flow[InboundEnvelope, InboundEnvelope, NotUsed] =
@@ -849,7 +928,10 @@ private[remote] abstract class ArteryTransport(_system: ExtendedActorSystem, _pr
       .via(new InboundQuarantineCheck(this))
       .toMat(messageDispatcherSink)(Keep.right)
 
-  def inboundFlow(settings: ArterySettings, compressions: InboundCompressions): Flow[EnvelopeBuffer, InboundEnvelope, InboundCompressionAccess] = {
+  def inboundFlow(
+      settings: ArterySettings,
+      compressions: InboundCompressions
+  ): Flow[EnvelopeBuffer, InboundEnvelope, InboundCompressionAccess] = {
     Flow[EnvelopeBuffer]
       .via(killSwitch.flow)
       .viaMat(createDecoder(settings, compressions))(Keep.right)
@@ -919,9 +1001,7 @@ private[remote] object ArteryTransport {
   // thrown when the transport is shutting down and something triggers a new association
   object ShuttingDown extends RuntimeException with NoStackTrace
 
-  final case class InboundStreamMatValues[LifeCycle](
-    lifeCycle: LifeCycle,
-    completed: Future[Done])
+  final case class InboundStreamMatValues[LifeCycle](lifeCycle: LifeCycle, completed: Future[Done])
 
   def autoSelectPort(hostname: String, udp: Boolean): Int = {
     if (udp) {

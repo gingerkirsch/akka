@@ -5,7 +5,7 @@
 package akka.cluster.typed.internal.receptionist
 
 import akka.annotation.InternalApi
-import akka.cluster.{ ConfigValidation, JoinConfigCompatChecker }
+import akka.cluster.{ConfigValidation, JoinConfigCompatChecker}
 import com.typesafe.config.Config
 
 /**
@@ -21,4 +21,3 @@ final class ClusterReceptionistConfigCompatChecker extends JoinConfigCompatCheck
   override def check(toCheck: Config, actualConfig: Config): ConfigValidation =
     JoinConfigCompatChecker.fullMatch(requiredKeys, toCheck, actualConfig)
 }
-

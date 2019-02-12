@@ -5,8 +5,8 @@
 package akka.stream.scaladsl
 
 import akka.annotation.ApiMayChange
-import akka.stream.{ SinkRef, SourceRef }
-import akka.stream.impl.streamref.{ SinkRefStageImpl, SourceRefStageImpl }
+import akka.stream.{SinkRef, SourceRef}
+import akka.stream.impl.streamref.{SinkRefStageImpl, SourceRefStageImpl}
 import akka.util.OptionVal
 
 import scala.concurrent.Future

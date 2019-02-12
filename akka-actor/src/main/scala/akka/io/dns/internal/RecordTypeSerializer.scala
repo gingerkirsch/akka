@@ -5,7 +5,7 @@
 package akka.io.dns.internal
 
 import akka.io.dns.RecordType
-import akka.util.{ ByteIterator, ByteStringBuilder, OptionVal }
+import akka.util.{ByteIterator, ByteStringBuilder, OptionVal}
 
 /**
  * INTERNAL API

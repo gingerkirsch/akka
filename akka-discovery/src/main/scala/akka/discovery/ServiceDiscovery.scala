@@ -29,7 +29,7 @@ object ServiceDiscovery {
 
   /** Result of a successful resolve request */
   final class Resolved(val serviceName: String, val addresses: immutable.Seq[ResolvedTarget])
-    extends DeadLetterSuppression {
+      extends DeadLetterSuppression {
 
     /**
      * Java API
@@ -81,9 +81,9 @@ object ServiceDiscovery {
    * @param address optional IP address of the target. This is used during cluster bootstap when available.
    */
   final class ResolvedTarget(
-    val host:    String,
-    val port:    Option[Int],
-    val address: Option[InetAddress]
+      val host: String,
+      val port: Option[Int],
+      val address: Option[InetAddress]
   ) {
 
     /**
@@ -125,10 +125,7 @@ object ServiceDiscovery {
  *
  * @throws IllegalArgumentException if [[serviceName]] is 'null' or an empty String
  */
-final class Lookup(
-  val serviceName: String,
-  val portName:    Option[String],
-  val protocol:    Option[String]) {
+final class Lookup(val serviceName: String, val portName: Option[String], val protocol: Option[String]) {
 
   require(serviceName != null, "'serviceName' cannot be null")
   require(serviceName.trim.nonEmpty, "'serviceName' cannot be empty")
@@ -157,10 +154,9 @@ final class Lookup(
   def getProtocol: Optional[String] =
     protocol.asJava
 
-  private def copy(
-    serviceName: String         = serviceName,
-    portName:    Option[String] = portName,
-    protocol:    Option[String] = protocol): Lookup =
+  private def copy(serviceName: String = serviceName,
+                   portName: Option[String] = portName,
+                   protocol: Option[String] = protocol): Lookup =
     new Lookup(serviceName, portName, protocol)
 
   override def toString: String = s"Lookup($serviceName,$portName,$protocol)"
@@ -228,8 +224,10 @@ case object Lookup {
       case SrvQuery(portName, protocol, serviceName) if validDomainName(serviceName) =>
         Lookup(serviceName).withPortName(portName).withProtocol(protocol)
 
-      case null => throw new NullPointerException("Unable to create Lookup from passed SRV string. Passed value is 'null'")
-      case _    => throw new IllegalArgumentException(s"Unable to create Lookup from passed SRV string, invalid format: $str")
+      case null =>
+        throw new NullPointerException("Unable to create Lookup from passed SRV string. Passed value is 'null'")
+      case _ =>
+        throw new IllegalArgumentException(s"Unable to create Lookup from passed SRV string, invalid format: $str")
     }
 
   /**

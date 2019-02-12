@@ -4,17 +4,17 @@
 
 package akka.stream.impl.io.compression
 
-import java.util.zip.{ CRC32, Inflater, ZipException }
+import java.util.zip.{CRC32, Inflater, ZipException}
 
 import akka.annotation.InternalApi
 import akka.stream.Attributes
 import akka.stream.impl.io.ByteStringParser
-import akka.stream.impl.io.ByteStringParser.{ ParseResult, ParseStep }
+import akka.stream.impl.io.ByteStringParser.{ParseResult, ParseStep}
 import akka.util.ByteString
 
 /** INTERNAL API */
 @InternalApi private[akka] class GzipDecompressor(maxBytesPerChunk: Int)
-  extends DeflateDecompressorBase(maxBytesPerChunk) {
+    extends DeflateDecompressorBase(maxBytesPerChunk) {
 
   override def createLogic(attr: Attributes) = new DecompressorParsingLogic {
     override val inflater: Inflater = new Inflater(true)

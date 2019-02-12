@@ -7,11 +7,11 @@ package akka.io.dns.internal
 import java.util.concurrent.atomic.AtomicReference
 
 import akka.annotation.InternalApi
-import akka.io.{ Dns, PeriodicCacheCleanup }
+import akka.io.{Dns, PeriodicCacheCleanup}
 import akka.io.dns.CachePolicy.CachePolicy
 import akka.io.SimpleDnsCache._
-import akka.io.dns.DnsProtocol.{ Ip, RequestType, Resolved }
-import akka.io.dns.{ AAAARecord, ARecord }
+import akka.io.dns.DnsProtocol.{Ip, RequestType, Resolved}
+import akka.io.dns.{AAAARecord, ARecord}
 
 import scala.annotation.tailrec
 import scala.collection.immutable
@@ -20,9 +20,11 @@ import scala.collection.immutable
  * Internal API
  */
 @InternalApi class AsyncDnsCache extends Dns with PeriodicCacheCleanup {
-  private val cacheRef = new AtomicReference(new Cache[(String, RequestType), Resolved](
-    immutable.SortedSet()(expiryEntryOrdering()),
-    immutable.Map(), () => clock))
+  private val cacheRef = new AtomicReference(
+    new Cache[(String, RequestType), Resolved](immutable.SortedSet()(expiryEntryOrdering()),
+                                               immutable.Map(),
+                                               () => clock)
+  )
 
   private val nanoBase = System.nanoTime()
 

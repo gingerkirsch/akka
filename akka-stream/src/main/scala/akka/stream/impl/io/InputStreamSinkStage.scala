@@ -4,15 +4,15 @@
 
 package akka.stream.impl.io
 
-import java.io.{ IOException, InputStream }
-import java.util.concurrent.{ BlockingQueue, LinkedBlockingDeque, TimeUnit }
+import java.io.{IOException, InputStream}
+import java.util.concurrent.{BlockingQueue, LinkedBlockingDeque, TimeUnit}
 
 import akka.annotation.InternalApi
 import akka.stream.Attributes.InputBuffer
 import akka.stream.impl.Stages.DefaultAttributes
 import akka.stream.impl.io.InputStreamSinkStage._
 import akka.stream.stage._
-import akka.stream.{ AbruptStageTerminationException, Attributes, Inlet, SinkShape }
+import akka.stream.{AbruptStageTerminationException, Attributes, Inlet, SinkShape}
 import akka.util.ByteString
 
 import scala.annotation.tailrec
@@ -39,7 +39,8 @@ private[stream] object InputStreamSinkStage {
 /**
  * INTERNAL API
  */
-@InternalApi final private[stream] class InputStreamSinkStage(readTimeout: FiniteDuration) extends GraphStageWithMaterializedValue[SinkShape[ByteString], InputStream] {
+@InternalApi final private[stream] class InputStreamSinkStage(readTimeout: FiniteDuration)
+    extends GraphStageWithMaterializedValue[SinkShape[ByteString], InputStream] {
 
   val in = Inlet[ByteString]("InputStreamSink.in")
   override def initialAttributes: Attributes = DefaultAttributes.inputStreamSink
@@ -110,11 +111,10 @@ private[stream] object InputStreamSinkStage {
  * INTERNAL API
  * InputStreamAdapter that interacts with InputStreamSinkStage
  */
-@InternalApi private[akka] class InputStreamAdapter(
-  sharedBuffer: BlockingQueue[StreamToAdapterMessage],
-  sendToStage:  (AdapterToStageMessage) => Unit,
-  readTimeout:  FiniteDuration)
-  extends InputStream {
+@InternalApi private[akka] class InputStreamAdapter(sharedBuffer: BlockingQueue[StreamToAdapterMessage],
+                                                    sendToStage: (AdapterToStageMessage) => Unit,
+                                                    readTimeout: FiniteDuration)
+    extends InputStream {
 
   var isInitialized = false
   var isActive = true
@@ -149,31 +149,33 @@ private[stream] object InputStreamSinkStage {
     require(length > 0, "length must be > 0")
     require(begin + length <= a.length, "begin + length must be smaller or equal to the array length")
 
-    executeIfNotClosed(() =>
-      if (isStageAlive) {
-        detachedChunk match {
-          case None =>
-            try {
-              sharedBuffer.poll(readTimeout.toMillis, TimeUnit.MILLISECONDS) match {
-                case Data(data) =>
-                  detachedChunk = Some(data)
-                  readBytes(a, begin, length)
-                case Finished =>
-                  isStageAlive = false
-                  -1
-                case Failed(ex) =>
-                  isStageAlive = false
-                  throw new IOException(ex)
-                case null        => throw new IOException("Timeout on waiting for new data")
-                case Initialized => throw new IllegalStateException("message 'Initialized' must come first")
+    executeIfNotClosed(
+      () =>
+        if (isStageAlive) {
+          detachedChunk match {
+            case None =>
+              try {
+                sharedBuffer.poll(readTimeout.toMillis, TimeUnit.MILLISECONDS) match {
+                  case Data(data) =>
+                    detachedChunk = Some(data)
+                    readBytes(a, begin, length)
+                  case Finished =>
+                    isStageAlive = false
+                    -1
+                  case Failed(ex) =>
+                    isStageAlive = false
+                    throw new IOException(ex)
+                  case null        => throw new IOException("Timeout on waiting for new data")
+                  case Initialized => throw new IllegalStateException("message 'Initialized' must come first")
+                }
+              } catch {
+                case ex: InterruptedException => throw new IOException(ex)
               }
-            } catch {
-              case ex: InterruptedException => throw new IOException(ex)
-            }
-          case Some(data) =>
-            readBytes(a, begin, length)
-        }
-      } else -1)
+            case Some(data) =>
+              readBytes(a, begin, length)
+          }
+        } else -1
+    )
   }
 
   private[this] def readBytes(a: Array[Byte], begin: Int, length: Int): Int = {
@@ -194,8 +196,7 @@ private[stream] object InputStreamSinkStage {
   }
 
   @tailrec
-  private[this] def getData(arr: Array[Byte], begin: Int, length: Int,
-                            gotBytes: Int): Int = {
+  private[this] def getData(arr: Array[Byte], begin: Int, length: Int, gotBytes: Int): Int = {
     grabDataChunk() match {
       case Some(data) =>
         val size = data.size

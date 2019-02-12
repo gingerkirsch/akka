@@ -11,7 +11,7 @@ import akka.persistence._
 import akka.util.Helpers.toRootLowerCase
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 import akka.pattern.CircuitBreaker
 
@@ -40,8 +40,10 @@ trait AsyncWriteJournal extends Actor with WriteJournalBase with AsyncRecovery {
       case "repair-by-discard-old" => ReplayFilter.RepairByDiscardOld
       case "fail"                  => ReplayFilter.Fail
       case "warn"                  => ReplayFilter.Warn
-      case other => throw new IllegalArgumentException(
-        s"invalid replay-filter.mode [$other], supported values [off, repair-by-discard-old, fail, warn]")
+      case other =>
+        throw new IllegalArgumentException(
+          s"invalid replay-filter.mode [$other], supported values [off, repair-by-discard-old, fail, warn]"
+        )
     }
   private def isReplayFilterEnabled: Boolean = replayFilterMode != ReplayFilter.Disabled
   private val replayFilterWindowSize: Int = config.getInt("replay-filter.window-size")
@@ -73,8 +75,10 @@ trait AsyncWriteJournal extends Actor with WriteJournalBase with AsyncRecovery {
             Future.successful(messages.collect { case a: AtomicWrite => f })
         }).map { results =>
           if (results.nonEmpty && results.size != atomicWriteCount)
-            throw new IllegalStateException("asyncWriteMessages returned invalid number of results. " +
-              s"Expected [${prepared.get.size}], but got [${results.size}]")
+            throw new IllegalStateException(
+              "asyncWriteMessages returned invalid number of results. " +
+              s"Expected [${prepared.get.size}], but got [${results.size}]"
+            )
           results
         }
 
@@ -96,7 +100,10 @@ trait AsyncWriteJournal extends Actor with WriteJournalBase with AsyncRecovery {
                     }
                   case Failure(e) =>
                     a.payload.foreach { p =>
-                      resequencer ! Desequenced(WriteMessageRejected(p, e, actorInstanceId), n, persistentActor, p.sender)
+                      resequencer ! Desequenced(WriteMessageRejected(p, e, actorInstanceId),
+                                                n,
+                                                persistentActor,
+                                                p.sender)
                       n += 1
                     }
                 }
@@ -123,8 +130,14 @@ trait AsyncWriteJournal extends Actor with WriteJournalBase with AsyncRecovery {
 
       case r @ ReplayMessages(fromSequenceNr, toSequenceNr, max, persistenceId, persistentActor) =>
         val replyTo =
-          if (isReplayFilterEnabled) context.actorOf(ReplayFilter.props(persistentActor, replayFilterMode,
-            replayFilterWindowSize, replayFilterMaxOldWriters, replayDebugEnabled))
+          if (isReplayFilterEnabled)
+            context.actorOf(
+              ReplayFilter.props(persistentActor,
+                                 replayFilterMode,
+                                 replayFilterWindowSize,
+                                 replayFilterMaxOldWriters,
+                                 replayDebugEnabled)
+            )
           else persistentActor
 
         val readHighestSequenceNrFrom = math.max(0L, fromSequenceNr - 1)
@@ -133,7 +146,8 @@ trait AsyncWriteJournal extends Actor with WriteJournalBase with AsyncRecovery {
          * being called before a call to asyncReplayMessages even tho it currently always is. The Cassandra
          * plugin does rely on this so if you change this change the Cassandra plugin.
          */
-        breaker.withCircuitBreaker(asyncReadHighestSequenceNr(persistenceId, readHighestSequenceNrFrom))
+        breaker
+          .withCircuitBreaker(asyncReadHighestSequenceNr(persistenceId, readHighestSequenceNrFrom))
           .flatMap { highSeqNr =>
             val toSeqNr = math.min(toSequenceNr, highSeqNr)
             if (toSeqNr <= 0L || fromSequenceNr > toSeqNr)
@@ -149,22 +163,31 @@ trait AsyncWriteJournal extends Actor with WriteJournalBase with AsyncRecovery {
                   }
               }.map(_ => highSeqNr)
             }
-          }.map {
-            highSeqNr => RecoverySuccess(highSeqNr)
-          }.recover {
+          }
+          .map { highSeqNr =>
+            RecoverySuccess(highSeqNr)
+          }
+          .recover {
             case e => ReplayMessagesFailure(e)
-          }.pipeTo(replyTo).foreach {
-            _ => if (publish) context.system.eventStream.publish(r)
+          }
+          .pipeTo(replyTo)
+          .foreach { _ =>
+            if (publish) context.system.eventStream.publish(r)
           }
 
       case d @ DeleteMessagesTo(persistenceId, toSequenceNr, persistentActor) =>
-        breaker.withCircuitBreaker(asyncDeleteMessagesTo(persistenceId, toSequenceNr)) map {
-          _ => DeleteMessagesSuccess(toSequenceNr)
-        } recover {
-          case e => DeleteMessagesFailure(e, toSequenceNr)
-        } pipeTo persistentActor onComplete {
-          _ => if (publish) context.system.eventStream.publish(d)
-        }
+        breaker
+          .withCircuitBreaker(asyncDeleteMessagesTo(persistenceId, toSequenceNr))
+          .map { _ =>
+            DeleteMessagesSuccess(toSequenceNr)
+          }
+          .recover {
+            case e => DeleteMessagesFailure(e, toSequenceNr)
+          }
+          .pipeTo(persistentActor)
+          .onComplete { _ =>
+            if (publish) context.system.eventStream.publish(d)
+          }
     }
   }
 
@@ -266,7 +289,7 @@ private[persistence] object AsyncWriteJournal {
   val successUnit: Success[Unit] = Success(())
 
   final case class Desequenced(msg: Any, snr: Long, target: ActorRef, sender: ActorRef)
-    extends NoSerializationVerificationNeeded
+      extends NoSerializationVerificationNeeded
 
   class Resequencer extends Actor {
     import scala.collection.mutable.Map

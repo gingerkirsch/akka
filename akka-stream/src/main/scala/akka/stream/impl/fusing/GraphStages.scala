@@ -4,7 +4,7 @@
 
 package akka.stream.impl.fusing
 
-import java.util.concurrent.atomic.{ AtomicBoolean, AtomicReference }
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 import akka.Done
 import akka.actor.Cancellable
@@ -14,24 +14,25 @@ import akka.event.Logging
 import akka.stream.FlowMonitorState._
 import akka.stream.impl.Stages.DefaultAttributes
 import akka.stream.impl.StreamLayout._
-import akka.stream.impl.{ LinearTraversalBuilder, ReactiveStreamsCompliance }
+import akka.stream.impl.{LinearTraversalBuilder, ReactiveStreamsCompliance}
 import akka.stream.scaladsl._
 import akka.stream.stage._
-import akka.stream.{ Shape, _ }
+import akka.stream.{Shape, _}
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.util.Try
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 
 /**
  * INTERNAL API
  */
 // TODO: Fix variance issues
 @InternalApi private[akka] final case class GraphStageModule[+S <: Shape @uncheckedVariance, +M](
-  shape:      S,
-  attributes: Attributes,
-  stage:      GraphStageWithMaterializedValue[S, M]) extends AtomicModule[S, M] {
+    shape: S,
+    attributes: Attributes,
+    stage: GraphStageWithMaterializedValue[S, M]
+) extends AtomicModule[S, M] {
 
   override def withAttributes(attributes: Attributes): AtomicModule[S, M] =
     if (attributes ne this.attributes) new GraphStageModule(shape, attributes, stage)
@@ -59,13 +60,14 @@ import scala.concurrent.{ Future, Promise }
   private object Identity extends SimpleLinearGraphStage[Any] {
     override def initialAttributes = DefaultAttributes.identityOp
 
-    override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new GraphStageLogic(shape) with InHandler with OutHandler {
-      def onPush(): Unit = push(out, grab(in))
-      def onPull(): Unit = pull(in)
+    override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+      new GraphStageLogic(shape) with InHandler with OutHandler {
+        def onPush(): Unit = push(out, grab(in))
+        def onPull(): Unit = pull(in)
 
-      setHandler(in, this)
-      setHandler(out, this)
-    }
+        setHandler(in, this)
+        setHandler(out, this)
+      }
 
     override def toString = "Identity"
   }
@@ -78,31 +80,32 @@ import scala.concurrent.{ Future, Promise }
   @InternalApi private[akka] final class Detacher[T] extends SimpleLinearGraphStage[T] {
     override def initialAttributes = DefaultAttributes.detacher
 
-    override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new GraphStageLogic(shape) with InHandler with OutHandler {
+    override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+      new GraphStageLogic(shape) with InHandler with OutHandler {
 
-      def onPush(): Unit = {
-        if (isAvailable(out)) {
-          push(out, grab(in))
-          tryPull(in)
+        def onPush(): Unit = {
+          if (isAvailable(out)) {
+            push(out, grab(in))
+            tryPull(in)
+          }
         }
-      }
 
-      override def onUpstreamFinish(): Unit = {
-        if (!isAvailable(in)) completeStage()
-      }
-
-      def onPull(): Unit = {
-        if (isAvailable(in)) {
-          push(out, grab(in))
-          if (isClosed(in)) completeStage()
-          else pull(in)
+        override def onUpstreamFinish(): Unit = {
+          if (!isAvailable(in)) completeStage()
         }
+
+        def onPull(): Unit = {
+          if (isAvailable(in)) {
+            push(out, grab(in))
+            if (isClosed(in)) completeStage()
+            else pull(in)
+          }
+        }
+
+        setHandlers(in, out, this)
+
+        override def preStart(): Unit = tryPull(in)
       }
-
-      setHandlers(in, out, this)
-
-      override def preStart(): Unit = tryPull(in)
-    }
 
     override def toString = "Detacher"
   }
@@ -231,7 +234,7 @@ import scala.concurrent.{ Future, Promise }
   }
 
   final class TickSource[T](val initialDelay: FiniteDuration, val interval: FiniteDuration, val tick: T)
-    extends GraphStageWithMaterializedValue[SourceShape[T], Cancellable] {
+      extends GraphStageWithMaterializedValue[SourceShape[T], Cancellable] {
     override val shape = SourceShape(Outlet[T]("TickSource.out"))
     val out = shape.out
     override def initialAttributes: Attributes = DefaultAttributes.tickSource
@@ -288,9 +291,8 @@ import scala.concurrent.{ Future, Promise }
     override def toString: String = "SingleSource"
   }
 
-  final class FutureFlattenSource[T, M](
-    futureSource: Future[Graph[SourceShape[T], M]])
-    extends GraphStageWithMaterializedValue[SourceShape[T], Future[M]] {
+  final class FutureFlattenSource[T, M](futureSource: Future[Graph[SourceShape[T], M]])
+      extends GraphStageWithMaterializedValue[SourceShape[T], Future[M]] {
     ReactiveStreamsCompliance.requireNonNullElement(futureSource)
 
     val out: Outlet[T] = Outlet("FutureFlattenSource.out")
@@ -315,21 +317,24 @@ import scala.concurrent.{ Future, Promise }
           }
 
         // initial handler (until future completes)
-        setHandler(out, new OutHandler {
-          def onPull(): Unit = {}
+        setHandler(
+          out,
+          new OutHandler {
+            def onPull(): Unit = {}
 
-          override def onDownstreamFinish(): Unit = {
-            if (!materialized.isCompleted) {
-              // we used to try to materialize the "inner" source here just to get
-              // the materialized value, but that is not safe and may cause the graph shell
-              // to leak/stay alive after the stage completes
+            override def onDownstreamFinish(): Unit = {
+              if (!materialized.isCompleted) {
+                // we used to try to materialize the "inner" source here just to get
+                // the materialized value, but that is not safe and may cause the graph shell
+                // to leak/stay alive after the stage completes
 
-              materialized.tryFailure(new StreamDetachedException("Stream cancelled before Source Future completed"))
+                materialized.tryFailure(new StreamDetachedException("Stream cancelled before Source Future completed"))
+              }
+
+              super.onDownstreamFinish()
             }
-
-            super.onDownstreamFinish()
           }
-        })
+        )
 
         def onPush(): Unit =
           push(out, sinkIn.grab())
@@ -344,24 +349,26 @@ import scala.concurrent.{ Future, Promise }
           if (!sinkIn.isClosed) sinkIn.cancel()
 
         def onFutureSourceCompleted(result: Try[Graph[SourceShape[T], M]]): Unit = {
-          result.map { graph =>
-            val runnable = Source.fromGraph(graph).toMat(sinkIn.sink)(Keep.left)
-            val matVal = interpreter.subFusingMaterializer.materialize(runnable, defaultAttributes = attr)
-            materialized.success(matVal)
+          result
+            .map { graph =>
+              val runnable = Source.fromGraph(graph).toMat(sinkIn.sink)(Keep.left)
+              val matVal = interpreter.subFusingMaterializer.materialize(runnable, defaultAttributes = attr)
+              materialized.success(matVal)
 
-            setHandler(out, this)
-            sinkIn.setHandler(this)
+              setHandler(out, this)
+              sinkIn.setHandler(this)
 
-            if (isAvailable(out)) {
-              sinkIn.pull()
+              if (isAvailable(out)) {
+                sinkIn.pull()
+              }
+
             }
-
-          }.recover {
-            case t =>
-              sinkIn.cancel()
-              materialized.failure(t)
-              failStage(t)
-          }
+            .recover {
+              case t =>
+                sinkIn.cancel()
+                materialized.failure(t)
+                failStage(t)
+            }
         }
       }
 
@@ -466,4 +473,3 @@ import scala.concurrent.{ Future, Promise }
     }
 
 }
-

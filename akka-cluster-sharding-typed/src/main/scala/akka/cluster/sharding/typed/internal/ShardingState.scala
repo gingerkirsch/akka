@@ -5,11 +5,11 @@
 package akka.cluster.sharding.typed.internal
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.sharding.{ ClusterSharding, ShardRegion }
+import akka.cluster.sharding.{ClusterSharding, ShardRegion}
 import akka.cluster.sharding.ShardRegion.CurrentShardRegionState
 import akka.actor.typed.scaladsl.adapter._
 import akka.annotation.InternalApi
-import akka.cluster.sharding.typed.{ ClusterShardingQuery, GetShardRegionState }
+import akka.cluster.sharding.typed.{ClusterShardingQuery, GetShardRegionState}
 
 /**
  * INTERNAL API

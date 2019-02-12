@@ -5,9 +5,9 @@
 package akka.pattern
 
 import language.implicitConversions
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
-import akka.actor.{ Actor, ActorRef, Status }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
+import akka.actor.{Actor, ActorRef, Status}
 import akka.actor.ActorSelection
 import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
@@ -18,13 +18,13 @@ trait PipeToSupport {
 
   final class PipeableFuture[T](val future: Future[T])(implicit executionContext: ExecutionContext) {
     def pipeTo(recipient: ActorRef)(implicit sender: ActorRef = Actor.noSender): Future[T] = {
-      future andThen {
+      future.andThen {
         case Success(r) => recipient ! r
         case Failure(f) => recipient ! Status.Failure(f)
       }
     }
     def pipeToSelection(recipient: ActorSelection)(implicit sender: ActorRef = Actor.noSender): Future[T] = {
-      future andThen {
+      future.andThen {
         case Success(r) => recipient ! r
         case Failure(f) => recipient ! Status.Failure(f)
       }
@@ -41,22 +41,24 @@ trait PipeToSupport {
     }
   }
 
-  final class PipeableCompletionStage[T](val future: CompletionStage[T])(implicit @unused executionContext: ExecutionContext) {
+  final class PipeableCompletionStage[T](val future: CompletionStage[T])(
+      implicit @unused executionContext: ExecutionContext
+  ) {
     def pipeTo(recipient: ActorRef)(implicit sender: ActorRef = Actor.noSender): CompletionStage[T] = {
-      future whenComplete new BiConsumer[T, Throwable] {
+      future.whenComplete(new BiConsumer[T, Throwable] {
         override def accept(t: T, ex: Throwable): Unit = {
           if (t != null) recipient ! t
           if (ex != null) recipient ! Status.Failure(ex)
         }
-      }
+      })
     }
     def pipeToSelection(recipient: ActorSelection)(implicit sender: ActorRef = Actor.noSender): CompletionStage[T] = {
-      future whenComplete new BiConsumer[T, Throwable] {
+      future.whenComplete(new BiConsumer[T, Throwable] {
         override def accept(t: T, ex: Throwable): Unit = {
           if (t != null) recipient ! t
           if (ex != null) recipient ! Status.Failure(ex)
         }
-      }
+      })
     }
     def to(recipient: ActorRef): PipeableCompletionStage[T] = to(recipient, Actor.noSender)
     def to(recipient: ActorRef, sender: ActorRef): PipeableCompletionStage[T] = {
@@ -88,7 +90,8 @@ trait PipeToSupport {
    * The successful result of the future is sent as a message to the recipient, or
    * the failure is sent in a [[akka.actor.Status.Failure]] to the recipient.
    */
-  implicit def pipe[T](future: Future[T])(implicit executionContext: ExecutionContext): PipeableFuture[T] = new PipeableFuture(future)
+  implicit def pipe[T](future: Future[T])(implicit executionContext: ExecutionContext): PipeableFuture[T] =
+    new PipeableFuture(future)
 
   /**
    * Import this implicit conversion to gain the `pipeTo` method on [[scala.concurrent.Future]]:
@@ -108,5 +111,7 @@ trait PipeToSupport {
    * The successful result of the future is sent as a message to the recipient, or
    * the failure is sent in a [[akka.actor.Status.Failure]] to the recipient.
    */
-  implicit def pipeCompletionStage[T](future: CompletionStage[T])(implicit executionContext: ExecutionContext): PipeableCompletionStage[T] = new PipeableCompletionStage(future)
+  implicit def pipeCompletionStage[T](future: CompletionStage[T])(
+      implicit executionContext: ExecutionContext
+  ): PipeableCompletionStage[T] = new PipeableCompletionStage(future)
 }
